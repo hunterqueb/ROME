@@ -1,0 +1,15 @@
+Circle Trial 16
+--------------
+
+Circle tracking attempted, 6/6/2019 2:32
+
+Using new calibration.
+Set gains to 8 and .4. Stable.
+Started in center rather than at (1,0). Worked nicely
+
+Abs mean error:
+
+Average x error: .0649
+Average y error: .0135
+Average theta error: .0769
+

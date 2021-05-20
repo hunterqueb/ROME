@@ -1,0 +1,15 @@
+Elipse Trial 1
+--------------
+
+Circle tracking attempted, 6/6/2019 2:53
+
+Using 6/6/2019 calibration.
+Set gains to 8 and .4. 
+Started at (1,0).
+
+Abs mean error:
+
+Average x error: .0045
+Average y error: .0073
+Average theta error: .0089
+

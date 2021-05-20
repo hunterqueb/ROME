@@ -1,0 +1,11 @@
+Circle Trial 6
+--------------
+
+Circle tracking attempted, 6/6/2019 12:10
+
+Set gains to 2.5 and .2. Nothing strange. No spikes.
+
+Average x error: -.0021
+Average y error: -.0020
+Average theta error: -4.9503 * 10^-4
+

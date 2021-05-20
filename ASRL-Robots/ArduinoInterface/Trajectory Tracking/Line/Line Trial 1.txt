@@ -1,0 +1,15 @@
+Line Trial 1
+--------------
+
+Linetracking attempted, 6/6/2019 4:15
+
+Using 6/6/2019 calibration.
+Set gains to 8,.4.
+Started at (1,0).
+
+Abs mean error:
+
+Average x error: .0025
+Average y error: .00077851
+Average theta error: .0044
+

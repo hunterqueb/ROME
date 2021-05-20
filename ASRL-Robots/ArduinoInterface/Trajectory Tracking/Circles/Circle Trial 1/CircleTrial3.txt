@@ -1,0 +1,6 @@
+Trial 3
+-------
+
+Attempted circle plot, 6/6/2019 11:17
+
+Sudden spike in Yaw value. Not a problem with chord. Either a problem with motive tracking or controller.
