@@ -1,0 +1,14 @@
+Circle Trial 14
+--------------
+
+Circle tracking attempted, 6/6/2019 2:26
+
+Using new calibration.
+Set gains to 5 and .2. Stable.
+
+Abs mean error:
+
+Average x error: .0070
+Average y error: .0079
+Average theta error: .0118
+

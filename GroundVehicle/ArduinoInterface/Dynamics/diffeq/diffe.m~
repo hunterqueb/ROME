@@ -1,0 +1,7 @@
+
+motor = motor();
+k2 = motor.k2;
+k3 = motor.k3;
+Ra = motor.Ra;
+J0 = motor.J0;
+

@@ -1,0 +1,13 @@
+Circle Trial 8
+--------------
+
+Circle tracking attempted, 6/6/2019 13:24
+
+Set gains to 4 and .4. A spike towards the end similar to in trial 7, but this time the platform was seen moving.
+
+Abs mean error:
+
+Average x error: .0077
+Average y error: .0090
+Average theta error: .0207
+

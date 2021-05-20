@@ -1,0 +1,13 @@
+Circle Trial 10
+--------------
+
+Circle tracking attempted, 6/6/2019 13:35
+
+Set gains to 10 and .5. Spike towards the end of the circle. Suspected problem with calibration
+
+Abs mean error:
+
+Average x error: .0034
+Average y error: .0040
+Average theta error: .0165
+

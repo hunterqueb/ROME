@@ -1,0 +1,14 @@
+Circle Trial 12
+--------------
+
+Circle tracking attempted, 6/6/2019 2:14
+
+Using new calibration.
+Set gains to 10 and .5. Waving at the begining not as bad as trial 11.
+
+Abs mean error:
+
+Average x error: .0035
+Average y error: .0040
+Average theta error: .0058
+

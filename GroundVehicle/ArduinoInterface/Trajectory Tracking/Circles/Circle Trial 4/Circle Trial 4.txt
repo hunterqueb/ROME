@@ -1,0 +1,6 @@
+Circle Trial 4
+--------------
+
+Circle tracking attempted, 6/6/2019 12:03
+
+Set gains to 2.5 and .1. Appears to have fixed problem with spike in yaw angle. 

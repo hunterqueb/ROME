@@ -1,0 +1,18 @@
+Coupled Trial 04
+--------------
+
+Tracking for 10 degree trajectory attempted with GV with planks and arm mounted and moving
+attempted, 7/14/2019 1:16
+
+-500,1000 ground plane translation. Rigid body PaddleBoi4.0, 06/06 calibration.
+
+
+Set gains to 4 and .2.
+
+Tracking looks good with no spikes in orientation. End effector tracking lost 3/4 through.
+
+Abs mean error:
+
+x =     .0049
+y =     .0040
+theta = .0139
