@@ -1,0 +1,16 @@
+Elipse Trial 2
+--------------
+
+Elipse tracking attempted, 6/6/2019 2:53
+
+Using 6/6/2019 calibration.
+Set gains to 0.
+Started at (1,0).
+
+Abs mean error:
+
+NOT TRUE:
+Average x error: .0045
+Average y error: .0073
+Average theta error: .0089
+

@@ -1,0 +1,1 @@
+NatNetPolligErrorInCircle is the script that we use to connect matlab with motive. Run the script and it auto connects. It uses the crappy PathError script.

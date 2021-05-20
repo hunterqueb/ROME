@@ -1,0 +1,35 @@
+function [outputArg1,outputArg2] = getTransformation(theta)
+%GETTRANSFORMATION This function obtains the transformation from the global
+%frame to the AR2 workspace using the optiTrack camera system. Theta is
+%specified as a 6x1 matrix containing the current joint angle states.
+%   Detailed explanation goes here
+
+%% NatNet Connection
+natnetclient = natnet;
+natnetclient.HostIP = '127.0.0.1';
+natnetclient.ClientIP = '127.0.0.1';
+natnetclient.ConnectionType = 'Multicast';
+natnetclient.connect;
+
+if ( natnetclient.IsConnected == 0 )
+	fprintf( 'Client failed to connect\n' )
+	fprintf( '\tMake sure the host is connected to the network\n' )
+	fprintf( '\tand that the host and client IP addresses are correct\n\n' )
+	return
+end
+
+initialStatesWork = manipFK(theta);
+
+%% Obtaining global frame position for 10 seconds and averaging
+
+tic
+while toc <= 10
+    data = natnetclient.getFrame;
+    statesWorld(:,1) = [-data.LabeledMarker(1).x -data.LabeledMarker(1).z data.LabeledMarker(1).y 0 0 0]*1000;
+end
+
+averageStatesWorld = sum(statesWorld)/length(statesWorld);
+
+
+end
+
