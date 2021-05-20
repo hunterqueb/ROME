@@ -1,0 +1,4 @@
+path = '/dev/cu.usbmodem1411';
+a = serial(path);
+
+fopen(a)
