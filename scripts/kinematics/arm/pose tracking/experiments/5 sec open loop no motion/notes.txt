@@ -1,0 +1,13 @@
+equations of motions for experiment
+
+
+xdot_coef=0;%original 10
+    tTime=toc;
+    
+    xdot_ref = [xdot_coef*cos(tTime); xdot_coef*cos(tTime); xdot_coef*cos(tTime)];
+    tr = 5*pi/180*sin(2*pi/10/4.*tTime) + 60*pi/180;
+    tr=0;
+    theta_ref = [tr; tr; tr];
+    tr_dot = 5*pi/180.*cos(2*pi/10/4.*tTime);
+    tr_dot=0;
+    thetadot_ref = [tr_dot; tr_dot; tr_dot];
