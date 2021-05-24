@@ -1,0 +1,17 @@
+function [outputArg1,outputArg2] = readPacketFast(a,bytes)
+%READPACKETFAST Summary of this function goes here
+%   Detailed explanation goes here
+
+packet = [];
+
+zero = uint8(0);
+nextByte = fread(a,1);
+while (nextByte ~= zero)
+    packet = [packet nextByte];
+    nextByte = fread(a,1);
+end
+
+packet = cobsi(packet);
+end
+
+

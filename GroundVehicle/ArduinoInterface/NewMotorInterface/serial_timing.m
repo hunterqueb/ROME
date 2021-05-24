@@ -22,7 +22,7 @@ end
 
 %% Receive data
 
-bytearray = [uint8(0) uint8(0)];
+bytearray = [uint8(0) uint8(1)];
 encoded = cobs(bytearray);
 fwrite(a,encoded);
 fwrite(a,0);
