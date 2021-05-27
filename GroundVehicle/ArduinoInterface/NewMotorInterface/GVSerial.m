@@ -5,6 +5,8 @@ classdef GVSerial
     properties(Access = private, Constant = true)
         GET_COUNTS = uint8(0)
         UPDATE_VOLTAGES = uint8(6)
+        SET_RADSEC = uint8(4)
+        UPDATE_MOTORS = uint8(5)
     end
     
     properties
@@ -28,6 +30,20 @@ classdef GVSerial
             
             binaryCounts = readPacket(obj.serial);
             counts = typecast(uint8(binaryCounts),'int32');
+        end
+        
+        function [] = setRadSec(obj,ID,radSec)
+            
+            CMD = obj.SET_RADSEC;
+            data = uint8([CMD,ID,radSec]);
+            writePacket(obj.serial,data);
+        end
+        
+        function [] = updateMotors(obj,ID,radSecs)
+            
+            CMD = obj.UPDATE_MOTORS;
+            data = uint8([CMD,ID,radSecs]);
+            writePacket(obj.serial,data);
         end
     end
 end

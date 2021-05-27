@@ -16,9 +16,12 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 int mode = 0;
 
 // Initialize motor array
-NewMotor mPointer[] = {NewMotor(1,&AFMS,2,23,3072,2.6,60.0,0.0,DIRECT), 
+NewMotor motors[] = {NewMotor(1,&AFMS,2,23,3072,2.6,60.0,0.0,DIRECT), 
                        NewMotor(2,&AFMS,19,27,3072,2.6,60.0,0.0,DIRECT), 
                        NewMotor(3,&AFMS,18,25,3072,2.6,60.0,0.0,DIRECT)};
+
+double Kp = 2.5,Ki = 60.25,Kd = 0.0;
+
 
 void setup() 
 {
@@ -26,12 +29,8 @@ void setup()
   packetizer.setPacketHandler(&onPacketReceived);
   AFMS.begin();
 
-//  mPointer[0] =   NewMotor(0,&AFMS,2,23,3072,2.6,60.0,0.0,DIRECT);
-//  mPointer[1] =   NewMotor(0,&AFMS,19,27,3072,2.6,60.0,0.0,DIRECT);
-//  mPointer[2] =   NewMotor(0,&AFMS,18,25,3072,2.6,60.0,0.0,DIRECT);
-
   for (int i = 0; i < 3; i++)
-    mPointer[i].begin();
+    motors[i].begin();
 
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -39,12 +38,22 @@ void setup()
 
 void loop() 
 {
+  // Receive new serial command packets
   packetizer.update();
+
+  // Update motor PID's if in automatic mode 1
+  if(mode == 1)
+  {
+        motors[0].updateMotor();
+        motors[1].updateMotor();
+        motors[2].updateMotor();
+  }
 
 //  if (packetizer.overflow())
 //  {
 //    digitalWrite(LED_BUILTIN, HIGH);
 //  }
+
 }
 
 void onPacketReceived(const uint8_t* buffer, size_t size)
@@ -58,7 +67,7 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
     {        
       byte ID = buffer[1];
     
-      int32_t count = mPointer[ID-1].getCounts();
+      int32_t count = motors[ID-1].getCounts();
       byte result[4];
   
       result[0] = (count & 0x000000ff);
@@ -84,11 +93,45 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
       for(int i=4;i<6;i++)
           volt3[i-4] = buffer[i];
 
-      mPointer[0].setDuty(*((int*)(volt1)));
-      mPointer[0].setDuty(*((int*)(volt2)));
-      mPointer[0].setDuty(*((int*)(volt3)));
+      motors[0].setDuty(*((int*)(volt1)));
+      motors[0].setDuty(*((int*)(volt2)));
+      motors[0].setDuty(*((int*)(volt3)));
       
       break;
+    }
+    case SET_RADSEC:
+    {
+      mode = 1;
+      byte ID = buffer[1];
+      byte radSec[4];
+
+      for (int i = 0;i < 4; i++)
+        radSec[i] = buffer[i+2];  
+      
+      motors[ID].setSetpoint(*((float*)(radSec)));
+      
+      break;
+    }
+    case UPDATE_MOTORS:
+    {
+      mode = 1;
+      
+      byte radSec1[4];
+      byte radSec2[4];
+      byte radSec3[4];
+
+      for (int i = 0;i < 4;i++)
+      {
+        radSec1[i] = buffer[i+1];
+        radSec2[i] = buffer[i+5];
+        radSec3[i] = buffer[i+9];
+      }
+      
+      motors[0].setSetpoint(*((float*)(radSec1)));
+      motors[1].setSetpoint(*((float*)(radSec2)));
+      motors[2].setSetpoint(*((float*)(radSec3)));
+      
+      break;           
     }
     default:
     {
