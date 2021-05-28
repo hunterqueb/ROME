@@ -25,7 +25,7 @@ double Kp = 2.5,Ki = 60.25,Kd = 0.0;
 
 void setup() 
 {
-  packetizer.begin(115200);
+  packetizer.begin(19200);
   packetizer.setPacketHandler(&onPacketReceived);
   AFMS.begin();
 
@@ -80,29 +80,41 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
     }
     case UPDATE_VOLTAGES:
     {
+      mode = 0;
+      
+      for (int ID = 0;ID < 3;ID++)
+      {
+        if (motors[ID].getPIDMode() == 1)
+          motors[ID].setPIDMode(0);
+      }
+        
       byte volt1[2];
       byte volt2[2];
       byte volt3[2];
                                
       for(int i=0;i<2;i++)
-          volt1[i] = buffer[i];
+          volt1[i] = buffer[i+1];
       
       for(int i=2;i<4;i++)
-          volt2[i-2] = buffer[i];
+          volt2[i-2] = buffer[i+1];
       
       for(int i=4;i<6;i++)
-          volt3[i-4] = buffer[i];
+          volt3[i-4] = buffer[i+1];
 
       motors[0].setDuty(*((int*)(volt1)));
-      motors[0].setDuty(*((int*)(volt2)));
-      motors[0].setDuty(*((int*)(volt3)));
+      motors[1].setDuty(*((int*)(volt2)));
+      motors[2].setDuty(*((int*)(volt3)));
       
       break;
     }
     case SET_RADSEC:
     {
       mode = 1;
-      byte ID = buffer[1];
+      byte ID = buffer[1] - 1;
+
+      if (motors[ID].getPIDMode() == 0)
+        motors[ID].setPIDMode(1);
+   
       byte radSec[4];
 
       for (int i = 0;i < 4; i++)
@@ -115,6 +127,12 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
     case UPDATE_MOTORS:
     {
       mode = 1;
+
+      for (int ID = 0;ID < 3;ID++)
+      {
+        if (motors[ID].getPIDMode() == 0)
+          motors[ID].setPIDMode(1);
+      }
       
       byte radSec1[4];
       byte radSec2[4];

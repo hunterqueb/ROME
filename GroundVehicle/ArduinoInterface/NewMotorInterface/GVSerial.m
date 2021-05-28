@@ -35,14 +35,30 @@ classdef GVSerial
         function [] = setRadSec(obj,ID,radSec)
             
             CMD = obj.SET_RADSEC;
-            data = uint8([CMD,ID,radSec]);
+            setpoint = typecast(single(radSec),'uint8');
+            data = uint8([CMD,ID,setpoint]);
             writePacket(obj.serial,data);
         end
         
-        function [] = updateMotors(obj,ID,radSecs)
+        function [] = updateMotors(obj,radSecs)
             
             CMD = obj.UPDATE_MOTORS;
-            data = uint8([CMD,ID,radSecs]);
+            setpoint = typecast(single(radSecs),'uint8');
+            data = uint8([CMD,setpoint]);
+            writePacket(obj.serial,data);
+        end
+        
+        function [] = updateVoltages(obj,voltages)
+            
+            bat = 11.4;
+            % Convert to driver format
+            for i = 1:3
+                voltages(i) = 255*voltages(i)/bat;
+            end
+            
+            CMD = obj.UPDATE_VOLTAGES;
+            setpoint = typecast(int16(voltages),'uint8');
+            data = uint8([CMD,setpoint]);
             writePacket(obj.serial,data);
         end
     end
