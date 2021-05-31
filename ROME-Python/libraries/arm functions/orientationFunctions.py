@@ -1,4 +1,6 @@
 import numpy as np
+import armKinematics
+import spatialmath.base as tr
 # from scipy.spatial.transform import Rotation as R
 # from numba import jit
 # import time
@@ -12,9 +14,10 @@ def Vec2Skew(v):
     return Mx
 
 def getOrientErr(C_ref,C):
-    
-    # [:,1] gets row vector
-    # [1,:] gets column vector
+#   needs testing
+#  
+    # [:,1] gets column vector
+    # [1,:] gets row vector
     nd = C_ref[:, 0]
     sd = C_ref[:, 1]
     ad = C_ref[:, 2]
@@ -36,5 +39,32 @@ def getOrientErr(C_ref,C):
 
     return [eo, L]
 
+def getPoseError(x_ref,theta_ref,q_init):
+# needs testing
+
+    armState = armKinematics.AR2FKZYZ(q_init)
+
+    x_init = armState[0:3]
+    theta_init = armState[3:6]
+
+    ex_init = x_ref - x_init
+    C_ref = tr.eul2r(theta_ref)
+    C_init = tr.eul2r(theta_init)
+
+    errors = getOrientErr(C_ref,C_init)
+
+    err_init = [ex_init,errors[0]]
+
+    return err_init
 
 
+if __name__ == "__main__":
+    
+    theta0 = np.asarray([0, -1.396263401595464, 1.570796326794897, 0, 0, 0])
+
+    armState = armKinematics.AR2FKZYZ(theta0)
+    
+    print(armState)
+    print(armState[0:3])
+
+    print(armState[3:6])
