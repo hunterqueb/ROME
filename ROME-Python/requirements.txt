@@ -1,0 +1,7 @@
+numba
+numpy
+pyserial
+pyfirmata
+spatialmath-python
+# DOCS https://petercorke.github.io/spatialmath-python/
+# https://petercorke.github.io/robotics-toolbox-python/index.html
