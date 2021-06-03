@@ -30,8 +30,8 @@ class NatNetClientClass():
         
         #create temp files that will help us get the which robot is which
         self.tempID = 2 * [None]
-        self.tempPos = 2 * [None]
-        self.tempOri = 2 * [None]
+        self.tempPos = 2 * [3 * [None]]
+        self.tempOri = 2 * [4 * [None]]
         self.initCounter = 0
         
         self.streamingClient.run()
@@ -77,7 +77,7 @@ class NatNetClientClass():
         else:
             # one the second run of the function we compare the vertical axis values of the rigid bodies. from here, the arm will always have markers higher than the GV, 
             # so the depending on the value is what is stored in the dictonaries
-            if self.tempPos[0].z > self.tempPos[1].z:
+            if self.tempPos[0][1] > self.tempPos[1][1]:
                 self.RigidBodyID['AR2'] = self.tempID[0]
                 self.RigidBodyID['GV'] = self.tempID[1]
                 self.RigidBodyPosition['AR2'] = self.tempPos[0]
