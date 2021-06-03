@@ -118,10 +118,10 @@ class NatNetClientClass():
         orientationQuat = self.RigidBodyOrientation[robot] 
 
 
-        w = 0
-        x = 0
-        y = 0
-        z = 0
+        w = orientationQuat[0]
+        x = orientationQuat[1]
+        y = orientationQuat[2]
+        z = orientationQuat[3]
 
         # here we need to take the self.RigidBodyOrientation['GV'] and convert it to the w x y and z variables
         # w is scalar part,
