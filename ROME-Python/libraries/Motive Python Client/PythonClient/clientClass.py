@@ -4,7 +4,13 @@ import time
 
 # we need to get a only a few things,
 #   being able to determine which rigid body id is which
+#      
+#   RigidBodyPosition is stored as an array with length of 3
+#   our version has [1] as vertical axis
+#   [0] ans x and [2] as Z
 #   
+#   RigidBodyOrientation is stored as an array with length of 4, assuming is starts with scalar, and goes x y z
+#
 #   position and orientation of every rigid body
 #   ability to filter the data?
 
