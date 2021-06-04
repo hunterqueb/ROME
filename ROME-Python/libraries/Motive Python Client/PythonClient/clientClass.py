@@ -19,7 +19,7 @@ class NatNetClientClass():
         self.streamingClient = NatNetClient()
         self.streamingClient.newFrameListener = self.receiveNewFrame
         self.streamingClient.rigidBodyListener = self.initReceiveRigidBodyFrame
-        
+        print("created client")
 
         #dictionary to get the id of whatever robot, set to none for now
         self.RigidBodyID = {'GV' : None, 'AR2' : None}
@@ -35,9 +35,6 @@ class NatNetClientClass():
         self.initCounter = 0
         
         self.streamingClient.run()
-
-    def __del__(self):
-        pass
 
     # This is a callback function that gets connected to the NatNet client. It is called once frame
     def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
@@ -145,6 +142,7 @@ class NatNetClientClass():
 if __name__ == "__main__":
     client = NatNetClientClass()
     
-    time.sleep(5)
+    time.sleep(2)
 
     del client
+    print("deleted client")
