@@ -5,11 +5,7 @@ import time
 # we need to get a only a few things,
 #   being able to determine which rigid body id is which
 #      
-#   RigidBodyPosition is stored as an array with length of 3
-#   our version has [1] as vertical axis
-#   [0] ans x and [2] as Z
 #   
-#   RigidBodyOrientation is stored as an array with length of 4, assuming is starts with scalar, and goes x y z
 #
 #   position and orientation of every rigid body
 #   ability to filter the data?
@@ -98,6 +94,7 @@ class NatNetClientClass():
             # set the listener to the regular rigidbodyframe listener
             self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
 
+
     def quat2eul(self,robot):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
@@ -136,7 +133,35 @@ class NatNetClientClass():
         t4 = +1.0 - 2.0 * (y * y + z * z)
         yaw_z = math.atan2(t3, t4)
 
-        return roll_x, pitch_y, yaw_z  # in radians
+        return [roll_x, pitch_y, yaw_z]  # in radians
+
+    def getPosition(self,robot):
+        """        
+        RigidBodyPosition is stored as an array with length of 3
+        our version has [1] as vertical axis
+        [0] ans x and [2] as Z
+        """
+        pos = self.RigidBodyPosition[robot]
+
+        return pos
+
+    def getQuatOrientation(self,robot):
+        """        
+        Returns the orientation of the input robot in terms of the raw quaterion
+        -in the format of a list of four elements
+        """
+        oriQuat = self.RigidBodyOrientation[robot]
+
+        return oriQuat
+
+    def getEulOrientation(self,robot):
+        """        
+        Returns the orientation of the input robot in terms of the euler angles
+        -in the format of a list of three elements, each corresponding to the axis of the format of the position vectors
+        """
+        oriEul = self.quat2eul(self.RigidBodyOrientation[robot])
+
+        return oriEul
 
 
 if __name__ == "__main__":
