@@ -30,6 +30,11 @@ alpha6 = 0
 
 # @jit(parallel=True, fastmath=True)
 def DH(theta, alpha, d, a):
+    """
+    Defines and returns a DH parameter matrix based on the any set of inputs with the DH parameters
+
+    Returns a numpy array
+    """
     # DH1 = [np.math.cosd(theta) - np.math.sind(theta)*np.math.cosd(alpha) np.math.sind(theta)*np.math.sind(alpha) a*np.math.cosd(theta)
     #        np.math.sind(theta) np.math.cosd(theta)*np.math.cosd(alpha) - np.math.cosd(theta)*np.math.sind(alpha) a*np.math.sind(theta)
     #        0           np.math.sind(alpha)             np.math.cosd(alpha)             d
@@ -49,6 +54,11 @@ def DH(theta, alpha, d, a):
 
 # @jit(parallel=True, fastmath=True)
 def AR2FKZYZ(theta0):
+    """
+    Returns the Forward kinematics for the AR2 robot based on the ZYZ rotation sequence
+
+    Returns a single 6 element numpy array with the position (mm) being the first three positions and the orientation being the last 3 elements (radians)
+    """
 
     theta1 = theta0[0]
     theta2 = theta0[1]
@@ -74,6 +84,12 @@ def AR2FKZYZ(theta0):
     return np.concatenate((pos, ori), axis=None)
 
 def jacobian0(theta0):
+    """
+    Defines and returns the jacobian for any joint angle position
+
+    Returns a 6x6 numpy array
+    """
+
 
     theta1 = theta0[0]
     cth1 = np.math.cos(theta1)
