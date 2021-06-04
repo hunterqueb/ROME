@@ -501,11 +501,14 @@ class NatNetClient:
             exit
 
         # Create a separate thread for receiving data packets
-        dataThread = Thread( target = self.__dataThreadFunction, args = (self.dataSocket, ))
-        dataThread.start()
+        self.dataThread = Thread( target = self.__dataThreadFunction, args = (self.dataSocket, ))
+        self.dataThread.daemon = True
+        self.dataThread.start()
 
         # Create a separate thread for receiving command packets
-        commandThread = Thread( target = self.__dataThreadFunction, args = (self.commandSocket, ))
-        commandThread.start()
+        self.commandThread = Thread( target = self.__dataThreadFunction, args = (self.commandSocket, ))
+        self.commandThread.daemon = True
+        self.commandThread.start()
 
         self.sendCommand( self.NAT_REQUEST_MODELDEF, "", self.commandSocket, (self.serverIPAddress, self.commandPort) )
+
