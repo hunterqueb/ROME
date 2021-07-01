@@ -126,6 +126,34 @@ plot(qddotSim(:,1));
 hold on
 plot(qddotd(:,1));
 
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Acceleration [rad/s^2]','FontSize',12)
+
+
+figure
+plot(qdotSim(:,1));
+hold on
+plot(qdotd(:,1));
+
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Velocity [rad/s]','FontSize',12)
+
+
+figure
+plot(qSim(:,1));
+hold on
+plot(qd(:,1));
+
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Position [rad]','FontSize',12)
+
+
 error = qddotSim - qddotd;
 meanError(1) = mean(error(:,1));
 meanError(2) = mean(error(:,2));
@@ -156,8 +184,4 @@ meanError
 % %     'Simulation $\ddot{\theta_1}$','Simulation $\ddot{\theta_2}$','Simulation $\ddot{\theta_3}$','Simulation $\ddot{\theta_4}$','Simulation $\ddot{\theta_5}$','Simulation $\ddot{\theta_6}$');
 % % 
 % set(l, 'Interpreter', 'latex','FontSize',12);
-grid on
-
-xlabel('Time [sec]','FontSize',12)
-ylabel('Acceleration [rad/s^2]','FontSize',12)
 
