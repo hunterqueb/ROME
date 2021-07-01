@@ -77,7 +77,7 @@ qddotR(index,:) = [  -10*sin(t)  -10*sin(t)  -10*sin(t)        -10*sin(t)       
 
 qIC(index,:) = [0, 0, 0, 0, 0, 0];
 qdotIC(index,:) = [10, 10, 10, 10, 10, 10];
-qddotIC(index,:) = [14, 14, 14, 14 ,14 ,14];
+qddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
 
 
 if index == 1
@@ -122,7 +122,7 @@ for i = 1:6
 end
 
 MMat = squeeze(M(index,:,:));
-qddotR(index,:) = pinv(MMat)*(tauR(index,:)' - CandGVectors(index,:)');
+qddotRForw(index,:) = pinv(MMat)*(tauR(index,:)' - CandGVectors(index,:)');
 qddotSim(index+1,:) = pinv(MMat)*(tauCorr' - CandGVectors(index,:)');
 
 
@@ -141,6 +141,14 @@ tGraph = 0:0.1:10;
 tGraph = tGraph';
 
 angleToView = 1;
+
+% This proves that the inverse and forward dynamics are correct. The
+% conversion to torque then back to angle accelerations is accurate.
+figure
+plot(qddotRForw(:,angleToView));
+hold on
+plot(qddotR(:,angleToView));
+
 
 figure
 plot(tauR(:,angleToView))
