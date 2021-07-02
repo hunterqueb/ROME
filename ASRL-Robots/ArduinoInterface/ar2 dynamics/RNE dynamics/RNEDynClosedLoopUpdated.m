@@ -63,8 +63,12 @@ Robot.gravity = [0 0 9.81]';
 h = 0.1;
 t = 0;
 
-Kp = 1.2 * eye(6);
-Kd = 10 * eye(6);
+KpInner = 1.2 * eye(6);
+KdInner = 10 * eye(6);
+
+KpOuter = 0 * eye(6);
+KiOuter = 0 * eye(6);
+KdOuter = 0 * eye(6);
 
 index = 1;
 while t < 10
@@ -87,32 +91,47 @@ if index == 1
 else
     qdotSim(index,:) = h*qddotSim(index-1,:) + qdotSim(index-1,:);
 	qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
-    qddotSim(index,:) = (qddotd(index,:)' + Kd * (qdotd(index,:)'-qdotSim(index,:)') - Kp * (qd(index,:)' - qSim(index,:)'))';
+    qddotSim(index,:) = (qddotd(index,:)' + KdInner * (qdotd(index,:)'-qdotSim(index,:)') - KpInner * (qd(index,:)' - qSim(index,:)'))';
 end
+
+taud(index,:) = Robot.rne(qd(index,:),qdotd(index,:),qddotd(index,:));
+tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
+
+
+% tauError(index,:) = tauSim(index,:) - tauR(index,:);
+
+% if index == 1
+%     tauCorr = KpOuter*tauError(index,:) + Ki*(tauError(index,:)*h);
+% else
+%     tauCorr = KpInner*tauError(index,:) + Ki*(tauError(index,:)*h + tauError(index-1,:) + KdInner/h*(tauError(index,:)-tauError(index-1,:)));
+% end
+
+
 
 % inverse ends
 
 
-% % forward starts
-% CandGVectors(index,:) = Robot.rne(qd(index,:),qdotd(index,:),zeros(1,6));
-% 
-% Robot.gravity = [0 0 0]';
-% 
-% for i = 1:6
-%     qddotMass = zeros(1,6);
-%     qddotMass(i) = 1;
-%     M(index,:,i) = Robot.rne(qd(index,:),zeros(1,6),qddotMass);
-% end
-% 
-% MMat = squeeze(M(index,:,:));
-% qddotRForw(index,:) = pinv(MMat)*(tauR(index,:)' - CandGVectors(index,:)');
-% qddotSim(index+1,:) = pinv(MMat)*(tauCorr' - CandGVectors(index,:)');
-% 
-% 
-% % forward ends
+% forward starts
+CandGVectors(index,:) = Robot.rne(qd(index,:),qdotd(index,:),zeros(1,6));
 
-% % reset 
-% Robot.gravity = [0 0 9.81]';
+Robot.gravity = [0 0 0]';
+
+for i = 1:6
+    qddotMass = zeros(1,6);
+    qddotMass(i) = 1;
+    M(index,:,i) = Robot.rne(qd(index,:),zeros(1,6),qddotMass);
+end
+
+MMat = squeeze(M(index,:,:));
+qddotdForw(index,:) = pinv(MMat)*(taud(index,:)' - CandGVectors(index,:)');
+% here the wrench term (J(q)' * W) is also subtracted
+% qddotSim(index+1,:) = pinv(MMat)*(tauCorr' - CandGVectors(index,:)');
+
+
+% forward ends
+
+% reset 
+Robot.gravity = [0 0 9.81]';
 
 index = index + 1;
 t = t + 0.1;
@@ -170,10 +189,11 @@ meanError
 % 
 % % This proves that the inverse and forward dynamics are correct. The
 % % conversion to torque then back to angle accelerations is accurate.
-% figure
-% plot(qddotRForw(:,angleToView));
-% hold on
-% plot(qddotd(:,angleToView));
+
+figure
+plot(qddotdForw(:,angleToView));
+hold on
+plot(qddotd(:,angleToView));
 % 
 % 
 % figure
