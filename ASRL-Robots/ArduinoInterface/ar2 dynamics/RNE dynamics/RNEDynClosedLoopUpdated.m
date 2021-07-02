@@ -96,7 +96,8 @@ end
 
 taud(index,:) = Robot.rne(qd(index,:),qdotd(index,:),qddotd(index,:));
 tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
-
+% we can specify the wrench using this, by calling a fourth parameter
+% 'fext',W where W is a 6x1 vector [fx,fy,fz,rx,ry,rz]
 
 % tauError(index,:) = tauSim(index,:) - tauR(index,:);
 
