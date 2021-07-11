@@ -100,7 +100,7 @@ else
 end
 
 Jd = Jacobian0_analytical(qd);
-JSim = Jacobian0_analytical(qSim);
+
 [xd(1:3),xd(4:6)] = AR2FKZYZ(qd);
 [xSim(1:3),xSim(4:6)] = AR2FKZYZ(qSim);
 
@@ -131,7 +131,7 @@ tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
 
 e(index,:) = xd - xSim;
 
-qdotCorrected(index,:) = pinv(JSim) * (xdotd(index,:)' + Ke * e(index,:)'); % + (eye(6) - pinv(J)*J*qdot0; 
+qdotCorrected(index,:) = pinv(Jd) * (xdotd(index,:)' + Ke * e(index,:)'); % + (eye(6) - pinv(J)*J*qdot0; 
                                      % this term is added for a redundant
                                      % manipulator
 
