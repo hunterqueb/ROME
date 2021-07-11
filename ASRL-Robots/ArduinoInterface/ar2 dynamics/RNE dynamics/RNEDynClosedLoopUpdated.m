@@ -97,9 +97,8 @@ if index == 1
 else
     qdotSim(index,:) = h*qddotSim(index-1,:) + qdotSim(index-1,:);
 	qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
+    % inner control loop is here
     qddotSim(index,:) = (qddotd(index,:)' + KdInner * (qdotd(index,:)'-qdotSim(index,:)') - KpInner * (qd(index,:)' - qSim(index,:)'))';
-    % we can specify the wrench using this, by calling a fourth parameter
-    % 'fext',W where W is a 6x1 vector [fx,fy,fz,rx,ry,rz]
 end
 
 Jd = Jacobian0_analytical(qd);
@@ -112,7 +111,8 @@ xdotd(index,:) = Jd * qdotd(index,:)';
 
 taud(index,:) = Robot.rne(qd(index,:),qdotd(index,:),qddotd(index,:));
 tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
-
+    % we can specify the wrench using this, by calling a fourth parameter
+    % 'fext',W where W is a 6x1 vector [fx,fy,fz,rx,ry,rz]
 
 % inverse ends
 
