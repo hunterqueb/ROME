@@ -61,7 +61,7 @@ Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
 % timestep for sim
-h = 0.1;
+h = 0.01;
 
 % initialize the time variable
 t = 0;
@@ -93,7 +93,6 @@ if index == 1
     qSim(index,:) = qIC(index,:);
     qdotSim(index,:) = qdotIC(index,:);
     qddotSim(index,:) = qddotIC(index,:);
-
 else
     qdotSim(index,:) = h*qddotSim(index-1,:) + qdotSim(index-1,:);
 	qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
@@ -124,10 +123,15 @@ tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
 
 ePos(index,:) = xd - xSim;
 
-qdotCorrected(index,:) = pinv(JSim) * (xdotd(index,:)' + KOuter * ePos(index,:)'); % + (eye(6) - pinv(J)*J*qdot0; 
+qdotCorrected(index,:) = pinv(JSim) * (xdotd(index,:)' + KOuter * ePos(index,:)'); % + (eye(n) - pinv(J)*J*qdot0; 
                                      % this term is added for a redundant
                                      % manipulator
-
+                        
+if (index == 1)
+    qCorrected(index,:) = qIC(index,:);
+else
+    qCorrected(index,:) = h*qdotCorrected(index,:) + qCorrected(index-1,:);
+end
 % % forward starts -- this is here just for checking the accuracy of the
 % % forward and inverse dynamics functions
 % 
@@ -223,6 +227,48 @@ meanErrorOuterVel(4) = mean(errorOuterVel(:,4));
 meanErrorOuterVel(5) = mean(errorOuterVel(:,5));
 meanErrorOuterVel(6) = mean(errorOuterVel(:,6));
 
+errorInnerVel = qdotSim - qdotd;
+meanErrorInnerVel(1) = mean(errorInnerVel(:,1));
+meanErrorInnerVel(2) = mean(errorInnerVel(:,2));
+meanErrorInnerVel(3) = mean(errorInnerVel(:,3));
+meanErrorInnerVel(4) = mean(errorInnerVel(:,4));
+meanErrorInnerVel(5) = mean(errorInnerVel(:,5));
+meanErrorInnerVel(6) = mean(errorInnerVel(:,6));
+
+meanErrorInnerVel
 meanErrorOuterVel
+
+
+% this graph is to check the position results with the outer loop
+
+figure
+plot(qCorrected(:,angleToView));
+hold on
+plot(qd(:,angleToView));
+
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Position [rad]','FontSize',12)
+
+
+errorOuterPos = qCorrected - qd;
+meanErrorOuterPos(1) = mean(errorOuterPos(:,1));
+meanErrorOuterPos(2) = mean(errorOuterPos(:,2));
+meanErrorOuterPos(3) = mean(errorOuterPos(:,3));
+meanErrorOuterPos(4) = mean(errorOuterPos(:,4));
+meanErrorOuterPos(5) = mean(errorOuterPos(:,5));
+meanErrorOuterPos(6) = mean(errorOuterPos(:,6));
+
+errorInnerPos = qSim - qd;
+meanErrorInnerPos(1) = mean(errorInnerPos(:,1));
+meanErrorInnerPos(2) = mean(errorInnerPos(:,2));
+meanErrorInnerPos(3) = mean(errorInnerPos(:,3));
+meanErrorInnerPos(4) = mean(errorInnerPos(:,4));
+meanErrorInnerPos(5) = mean(errorInnerPos(:,5));
+meanErrorInnerPos(6) = mean(errorInnerPos(:,6));
+
+meanErrorInnerPos
+meanErrorOuterPos
 
 

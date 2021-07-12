@@ -60,17 +60,18 @@ Robot.name = 'AR2';
 Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
+% timestep for sim
 h = 0.1;
+
+% initialize the time variable
 t = 0;
 
+% Control Parameters
 KpInner = 1.2 * eye(6);
 KdInner = 10 * eye(6);
 
-KpOuter = 0 * eye(6);
-KiOuter = 0 * eye(6);
-KdOuter = 0 * eye(6);
-
-Ke = 2 * eye(6);
+% this would be the outer loop variables
+KOuter = 2 * eye(6);
 
 index = 1;
 
@@ -96,10 +97,12 @@ if index == 1
 else
     qdotSim(index,:) = h*qddotSim(index-1,:) + qdotSim(index-1,:);
 	qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
+    % inner control loop is here
     qddotSim(index,:) = (qddotd(index,:)' + KdInner * (qdotd(index,:)'-qdotSim(index,:)') - KpInner * (qd(index,:)' - qSim(index,:)'))';
 end
 
 Jd = Jacobian0_analytical(qd);
+JSim = Jacobian0_analytical(qSim);
 
 [xd(1:3),xd(4:6)] = AR2FKZYZ(qd);
 [xSim(1:3),xSim(4:6)] = AR2FKZYZ(qSim);
@@ -108,18 +111,8 @@ xdotd(index,:) = Jd * qdotd(index,:)';
 
 taud(index,:) = Robot.rne(qd(index,:),qdotd(index,:),qddotd(index,:));
 tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
-% we can specify the wrench using this, by calling a fourth parameter
-% 'fext',W where W is a 6x1 vector [fx,fy,fz,rx,ry,rz]
-
-% tauError(index,:) = tauSim(index,:) - tauR(index,:);
-
-% if index == 1
-%     tauCorr = KpOuter*tauError(index,:) + Ki*(tauError(index,:)*h);
-% else
-%     tauCorr = KpInner*tauError(index,:) + Ki*(tauError(index,:)*h + tauError(index-1,:) + KdInner/h*(tauError(index,:)-tauError(index-1,:)));
-% end
-
-
+    % we can specify the wrench using this, by calling a fourth parameter
+    % 'fext',W where W is a 6x1 vector [fx,fy,fz,rx,ry,rz]
 
 % inverse ends
 
@@ -127,52 +120,51 @@ tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
 % this is where the outer loop is added
 
 % xdotd is the desired cartesian space 1st derivative
-% e is the error e = xd - xactual;
+% ePos is the error e = xd - xactual;
 
-e(index,:) = xd - xSim;
+ePos(index,:) = xd - xSim;
 
-qdotCorrected(index,:) = pinv(Jd) * (xdotd(index,:)' + Ke * e(index,:)'); % + (eye(6) - pinv(J)*J*qdot0; 
+qdotCorrected(index,:) = pinv(JSim) * (xdotd(index,:)' + KOuter * ePos(index,:)'); % + (eye(n) - pinv(J)*J*qdot0; 
                                      % this term is added for a redundant
                                      % manipulator
-
-
-
-
-
-
-
-
-
-
-% forward starts
-CandGVectors(index,:) = Robot.rne(qd(index,:),qdotd(index,:),zeros(1,6));
-
-Robot.gravity = [0 0 0]';
-
-for i = 1:6
-    qddotMass = zeros(1,6);
-    qddotMass(i) = 1;
-    M(index,:,i) = Robot.rne(qd(index,:),zeros(1,6),qddotMass);
+                        
+if (index == 1)
+    qCorrected(index,:) = qIC(index,:);
+else
+    qCorrected(index,:) = h*qdotCorrected(index,:) + qCorrected(index-1,:);
 end
-
-MMat = squeeze(M(index,:,:));
-qddotdForw(index,:) = pinv(MMat)*(taud(index,:)' - CandGVectors(index,:)');
+% % forward starts -- this is here just for checking the accuracy of the
+% % forward and inverse dynamics functions
+% 
+% CandGVectors(index,:) = Robot.rne(qd(index,:),qdotd(index,:),zeros(1,6));
+% 
+% Robot.gravity = [0 0 0]';
+% 
+% for i = 1:6
+%     qddotMass = zeros(1,6);
+%     qddotMass(i) = 1;
+%     M(index,:,i) = Robot.rne(qd(index,:),zeros(1,6),qddotMass);
+% end
+% 
+% MMat = squeeze(M(index,:,:));
+% qddotdForw(index,:) = pinv(MMat)*(taud(index,:)' - CandGVectors(index,:)');
 % here the wrench term (J(q)' * W) is also subtracted
 % qddotSim(index+1,:) = pinv(MMat)*(tauCorr' - CandGVectors(index,:)');
+% 
+% % reset gravity from forward dynamics
+% Robot.gravity = [0 0 9.81]';
+% % forward ends
 
 
-% forward ends
-
-% reset 
-Robot.gravity = [0 0 9.81]';
-
+% update loop counters and time variable
 index = index + 1;
-t = t + 0.1;
+t = t + h;
 
 end
 
 angleToView = 1;
 
+% graph to check the acceleration results without the outer loop
 figure
 plot(qddotSim(:,1));
 hold on
@@ -183,7 +175,7 @@ grid on
 xlabel('Iterations','FontSize',12)
 ylabel('Acceleration [rad/s^2]','FontSize',12)
 
-
+% graph to check the velocity results without the outer loop
 figure
 plot(qdotSim(:,1));
 hold on
@@ -194,7 +186,7 @@ grid on
 xlabel('Iterations','FontSize',12)
 ylabel('Velocity [rad/s]','FontSize',12)
 
-
+% graph to check the position results without the outer loop
 figure
 plot(qSim(:,1));
 hold on
@@ -205,48 +197,79 @@ grid on
 xlabel('Iterations','FontSize',12)
 ylabel('Position [rad]','FontSize',12)
 
+% calculate the error of the acceleration using just the inner loop
+errorInnerAcc = qddotSim - qddotd;
+meanErrorInnerAcc(1) = mean(errorInnerAcc(:,1));
+meanErrorInnerAcc(2) = mean(errorInnerAcc(:,2));
+meanErrorInnerAcc(3) = mean(errorInnerAcc(:,3));
+meanErrorInnerAcc(4) = mean(errorInnerAcc(:,4));
+meanErrorInnerAcc(5) = mean(errorInnerAcc(:,5));
+meanErrorInnerAcc(6) = mean(errorInnerAcc(:,6));
 
-error = qddotSim - qddotd;
-meanError(1) = mean(error(:,1));
-meanError(2) = mean(error(:,2));
-meanError(3) = mean(error(:,3));
-meanError(4) = mean(error(:,4));
-meanError(5) = mean(error(:,5));
-meanError(6) = mean(error(:,6));
+meanErrorInnerAcc
 
-meanError
-
-% tGraph = 0:0.1:10;
-% tGraph = tGraph';
-% 
-% 
-% % This proves that the inverse and forward dynamics are correct. The
-% % conversion to torque then back to angle accelerations is accurate.
-
+% this graph is to check the velocity results with the outer loop
 figure
 plot(qdotCorrected(:,angleToView));
 hold on
 plot(qdotd(:,angleToView));
 
-disp('total overall error')
-errorTotal = qdotCorrected - qdotd;
-meanError2(1) = mean(errorTotal(:,1));
-meanError2(2) = mean(errorTotal(:,2));
-meanError2(3) = mean(errorTotal(:,3));
-meanError2(4) = mean(errorTotal(:,4));
-meanError2(5) = mean(errorTotal(:,5));
-meanError2(6) = mean(errorTotal(:,6));
+grid on
 
-meanError
+xlabel('Iterations','FontSize',12)
+ylabel('Velocity [rad/s]','FontSize',12)
 
-% 
-% 
-% figure
-% plot(tauR(:,angleToView))
-% hold on;
-% plot(tauSim(:,angleToView))
-% % l = legend('Analytical Generation $\ddot{\theta_1}$','Analytical Generation $\ddot{\theta_2}$','Analytical Generation $\ddot{\theta_3}$','Analytical Generation $\ddot{\theta_4}$','Analytical Generation $\ddot{\theta_5}$','Analytical Generation $\ddot{\theta_6}$',...
-% %     'Simulation $\ddot{\theta_1}$','Simulation $\ddot{\theta_2}$','Simulation $\ddot{\theta_3}$','Simulation $\ddot{\theta_4}$','Simulation $\ddot{\theta_5}$','Simulation $\ddot{\theta_6}$');
-% % 
-% set(l, 'Interpreter', 'latex','FontSize',12);
+
+errorOuterVel = qdotCorrected - qdotd;
+meanErrorOuterVel(1) = mean(errorOuterVel(:,1));
+meanErrorOuterVel(2) = mean(errorOuterVel(:,2));
+meanErrorOuterVel(3) = mean(errorOuterVel(:,3));
+meanErrorOuterVel(4) = mean(errorOuterVel(:,4));
+meanErrorOuterVel(5) = mean(errorOuterVel(:,5));
+meanErrorOuterVel(6) = mean(errorOuterVel(:,6));
+
+errorInnerVel = qdotSim - qdotd;
+meanErrorInnerVel(1) = mean(errorInnerVel(:,1));
+meanErrorInnerVel(2) = mean(errorInnerVel(:,2));
+meanErrorInnerVel(3) = mean(errorInnerVel(:,3));
+meanErrorInnerVel(4) = mean(errorInnerVel(:,4));
+meanErrorInnerVel(5) = mean(errorInnerVel(:,5));
+meanErrorInnerVel(6) = mean(errorInnerVel(:,6));
+
+meanErrorInnerVel
+meanErrorOuterVel
+
+
+% this graph is to check the position results with the outer loop
+
+figure
+plot(qCorrected(:,angleToView));
+hold on
+plot(qd(:,angleToView));
+
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Position [rad]','FontSize',12)
+
+
+errorOuterPos = qdotCorrected - qdotd;
+meanErrorOuterPos(1) = mean(errorOuterVel(:,1));
+meanErrorOuterVel(2) = mean(errorOuterVel(:,2));
+meanErrorOuterVel(3) = mean(errorOuterVel(:,3));
+meanErrorOuterVel(4) = mean(errorOuterVel(:,4));
+meanErrorOuterVel(5) = mean(errorOuterVel(:,5));
+meanErrorOuterVel(6) = mean(errorOuterVel(:,6));
+
+errorInnerVel = qdotSim - qdotd;
+meanErrorInnerVel(1) = mean(errorInnerVel(:,1));
+meanErrorInnerVel(2) = mean(errorInnerVel(:,2));
+meanErrorInnerVel(3) = mean(errorInnerVel(:,3));
+meanErrorInnerVel(4) = mean(errorInnerVel(:,4));
+meanErrorInnerVel(5) = mean(errorInnerVel(:,5));
+meanErrorInnerVel(6) = mean(errorInnerVel(:,6));
+
+meanErrorInnerVel
+meanErrorOuterVel
+
 
