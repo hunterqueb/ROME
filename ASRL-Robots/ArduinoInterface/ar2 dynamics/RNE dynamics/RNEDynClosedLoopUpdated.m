@@ -97,7 +97,7 @@ else
     qdotSim(index,:) = h*qddotSim(index-1,:) + qdotSim(index-1,:);
 	qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
     % inner control loop is here
-    qddotSim(index,:) = (qddotd(index,:)' + KdInner * (qdotd(index,:)'-qdotSim(index,:)') - KpInner * (qd(index,:)' - qSim(index,:)'))';
+    qddotSim(index,:) = (qddotd(index,:)' + KdInner * (qdotd(index,:)'-qdotSim(index,:)') + KpInner * (qd(index,:)' - qSim(index,:)'))';
 end
 
 Jd = Jacobian0_analytical(qd);
