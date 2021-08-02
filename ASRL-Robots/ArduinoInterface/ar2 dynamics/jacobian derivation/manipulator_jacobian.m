@@ -130,6 +130,8 @@ fprintf(fid1, '%s \n', char(J6));
 fid2 = fopen('Jacobiandot0.txt','wt');
 fprintf(fid2, '%s \n', char(Jdot));
 
+fclose(fid1);
+fclose(fid2);
 
 % % J_GV_E = [1 1 0 0 0 -sq
 % %           1 1 0 0 0 
