@@ -12,12 +12,14 @@ f.close()
 
 # replace operations in jacobion
 for num in range(6):
+    content = content.replace("diff(theta"+str(num+1)+"(t), t)","thetadot"+str(num+1))
+    content = content.replace("theta" + str(num+1) + "(t)","theta" + str(num+1) + "")
+for num in range(6):
     content = content.replace("cos(theta"+str(num+1)+")","cth"+str(num+1))
     content = content.replace("sin(alpha"+str(num+1)+")","sal"+str(num+1))
     content = content.replace("sin(theta"+str(num+1)+")","sth"+str(num+1))
     content = content.replace("cos(alpha"+str(num+1)+")","cal"+str(num+1))
-    content = content.replace("diff(theta"+str(num+1)+"(t), t)","thetadot0("+str(num+1)+")")
-
+    
 # fix formatting
 content = content.replace("], ","];\n")
 content = content.replace("matrix(","")
