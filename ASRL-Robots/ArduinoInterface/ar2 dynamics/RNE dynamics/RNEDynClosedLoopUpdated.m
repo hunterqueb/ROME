@@ -61,7 +61,7 @@ Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
 % timestep for sim
-h = 0.01;
+h = 0.005;
 
 % initialize the time variable
 t = 0;
@@ -71,7 +71,7 @@ KpInner = 1.2 * eye(6);
 KdInner = 10 * eye(6);
 
 % this would be the outer loop variables
-KOuter = 2 * eye(6);
+KOuter = 1 * eye(6);
 
 index = 1;
 
@@ -84,8 +84,8 @@ qdotd(index,:) = [   10*cos(t)   10*cos(t)  10*cos(t)         10*cos(t)       10
 qddotd(index,:) = [  -10*sin(t)  -10*sin(t)  -10*sin(t)        -10*sin(t)           -10*sin(t)    -10*sin(t) ];
 
 
-qIC(index,:) = [0, 0, 0, 0, 0, 0];
-qdotIC(index,:) = [10, 10, 10, 10, 10, 10];
+qIC(index,:) = pi/180 * [20, 20, 20, 20, 20, 20];
+qdotIC(index,:) = [0, 0, 0, 0, 0, 0];
 qddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
 
 
@@ -168,7 +168,7 @@ figure
 plot(qddotSim(:,1));
 hold on
 plot(qddotd(:,1));
-
+title('Corrected Acceleration')
 grid on
 
 xlabel('Iterations','FontSize',12)
@@ -179,7 +179,7 @@ figure
 plot(qdotSim(:,1));
 hold on
 plot(qdotd(:,1));
-
+title('Corrected Inner Loop Velocity')
 grid on
 
 xlabel('Iterations','FontSize',12)
@@ -190,6 +190,7 @@ figure
 plot(qSim(:,1));
 hold on
 plot(qd(:,1));
+title('Corrected Inner Loop Position')
 
 grid on
 
@@ -212,6 +213,7 @@ figure
 plot(qdotCorrected(:,angleToView));
 hold on
 plot(qdotd(:,angleToView));
+title('Corrected Outer Loop Velocity')
 
 grid on
 
@@ -245,6 +247,7 @@ figure
 plot(qCorrected(:,angleToView));
 hold on
 plot(qd(:,angleToView));
+title('Corrected Outer Loop Position')
 
 grid on
 
