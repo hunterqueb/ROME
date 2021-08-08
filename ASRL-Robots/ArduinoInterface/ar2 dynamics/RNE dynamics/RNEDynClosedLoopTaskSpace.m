@@ -71,20 +71,27 @@ tSim = 10;
 KpInner = 1.2 * eye(6);
 KdInner = 10 * eye(6);
 
+% initial arm pos in joint
 theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
+
+% initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
+
+
 index = 1;
-
-
 while t < tSim
+%   desired equations of motion
     xd(index,:) = [state0(1),0,80*sin(2*pi*t/tSim)+state0(3),0,0,0];
     xdotd(index,:) = [0,0,80*cos(2*pi*t/tSim) * 2 * pi / tSim,0,0,0];
     xddotd(index,:) = [0,0,80*-sin(2*pi*t/tSim) * (2 * pi / tSim)^2,0,0,0];
     
+%   inital conditions
     xIC(index,:) = [state0',ori0'];
     xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
 	xddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
     
+%   on first pass, set the IC to first array index for all the simulated
+%   configurations
     if index == 1
         xSim(index,:) = xIC(index,:);
         xdotSim(index,:) = xdotIC(index,:);
@@ -93,21 +100,29 @@ while t < tSim
         qSim(index,:) = theta0;
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
     else
+%       forward integrate to get the task space motions
         xdotSim(index,:) = h*xddotSim(index-1,:) + xdotSim(index-1,:);
         xSim(index,:) = h*xdotSim(index,:) + xSim(index-1,:);
         
+%       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
+            % this calculation for the qdotSim is based on the previous time step calculation of the joint angles. this 
+%             WILL cause issues for calculation accuracy, but i hope the
+%             controller is robust enough to couteract these effects
         qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
         
+%       recalc the task space motions based on the new joint angle
+%       configuration estimations
         xdotSimG(index,:) = Jacobian0_analytical(qSim(index,:)) * qdotSim(index,:)';
         
         [xSimG(index,:),~] = AR2FKZYZ(qSim(index,:));
+        
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSim(index,:)') + KpInner * (xd(index,:)' - xSim(index,:)'))';
     end
     
     
-    
+% update loop
 index = index + 1;
 t = t + h;
 
