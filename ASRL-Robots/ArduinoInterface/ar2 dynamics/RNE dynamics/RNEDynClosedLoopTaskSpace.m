@@ -115,7 +115,7 @@ while t < tSim
 %       configuration estimations
         xdotSimG(index,:) = Jacobian0_analytical(qSim(index,:)) * qdotSim(index,:)';
         
-        [xSimG(index,:),~] = AR2FKZYZ(qSim(index,:));
+        [xSimG(index,1:3),xSimG(index,4:6)] = AR2FKZYZ(qSim(index,:));
         
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSim(index,:)') + KpInner * (xd(index,:)' - xSim(index,:)'))';
@@ -127,4 +127,40 @@ index = index + 1;
 t = t + h;
 
 end
+
+dimToView = 3;
+
+figure
+plot(xd(:,dimToView));
+hold on;
+plot(xSimG(:,dimToView));
+title('Corrected Inner Loop Position')
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Position [mm]','FontSize',12)
+legend('Desired Position','Simulated Position')
+
+figure
+plot(xdotd(:,dimToView));
+hold on;
+plot(xdotSimG(:,dimToView));
+title('Corrected Inner Loop Velocity')
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Velocity [mm/s]','FontSize',12)
+legend('Desired Velocity','Simulated Velocity')
+
+
+figure
+plot(xddotd(:,dimToView));
+hold on;
+plot(xddotSim(:,dimToView));
+title('Corrected Inner Loop Acceleration')
+grid on
+
+xlabel('Iterations','FontSize',12)
+ylabel('Acceleration [mm/s^2]','FontSize',12)
+legend('Desired Acceleration','Simulated Acceleration')
 
