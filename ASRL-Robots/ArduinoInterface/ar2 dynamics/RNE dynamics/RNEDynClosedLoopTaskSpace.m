@@ -77,13 +77,15 @@ theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
 
+maxSinAmount = 200;
 
 index = 1;
 while t < tSim
 %   desired equations of motion
-    xd(index,:) = [state0(1),0,80*sin(2*pi*t/tSim)+state0(3),0,0,0];
-    xdotd(index,:) = [0,0,80*cos(2*pi*t/tSim) * 2 * pi / tSim,0,0,0];
-    xddotd(index,:) = [0,0,80*-sin(2*pi*t/tSim) * (2 * pi / tSim)^2,0,0,0];
+
+    xd(index,:) = [state0(1),0,maxSinAmount*sin(2*pi*t/tSim)+state0(3),0,0,0];
+    xdotd(index,:) = [0,0,maxSinAmount*cos(2*pi*t/tSim) * 2 * pi / tSim,0,0,0];
+    xddotd(index,:) = [0,0,maxSinAmount*-sin(2*pi*t/tSim) * (2 * pi / tSim)^2,0,0,0];
     
 %   inital conditions
     xIC(index,:) = [state0',ori0'];
@@ -164,3 +166,15 @@ xlabel('Iterations','FontSize',12)
 ylabel('Acceleration [mm/s^2]','FontSize',12)
 legend('Desired Acceleration','Simulated Acceleration')
 
+
+errorInnerPos = xSimG - xd;
+errorInnerVel = xdotSimG - xdotd;
+errorInnerAcc = xddotSim - xddotd;
+
+meanErrPos = mean(errorInnerPos);
+meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
+meanErrVel = mean(errorInnerVel);
+meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
+meanErrAcc = mean(errorInnerAcc);
+meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
+% units in mm
