@@ -1,2 +1,0 @@
-statesArray_AR2_J = [30*pi/180,-80*pi/180,90*pi/180,0,0,.25,.25,.25,.25,.25,.25];
-Stepper1.updateStates(statesArray_AR2_J);
