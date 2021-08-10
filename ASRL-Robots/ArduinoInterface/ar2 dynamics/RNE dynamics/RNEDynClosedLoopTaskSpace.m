@@ -9,6 +9,7 @@
 %DH First, then inertia matrices for each 
 
 clear
+tic
 L(1) = Link([0 169.77/1000 64.2/1000 -1.5707], 'R');
 L(2) = Link([0 0 305/1000 0], 'R');
 L(3) = Link([-1.5707 0 0 1.5707], 'R');
@@ -60,16 +61,31 @@ Robot.name = 'AR2';
 Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
+% calculate the maxRadPerSec for each joint
+STEPPER_CONSTANT(1) = 1/(.022368421*(pi/180));
+STEPPER_CONSTANT(2) = 1/(.018082192*(pi/180));
+STEPPER_CONSTANT(3) = 1/(.017834395*(pi/180));
+STEPPER_CONSTANT(4) = 1/(.021710526*(pi/180));
+STEPPER_CONSTANT(5) = 1/(.045901639*(pi/180));
+STEPPER_CONSTANT(6) = 1/(.046792453*(pi/180));
+
+maxStepsPerSec = 1000;
+maxRadPerSec = zeros(6,1);
+
+for i = 1:6
+    maxRadPerSec(i) = maxStepsPerSec / STEPPER_CONSTANT(i);
+end
+
 % timestep for sim
 h = 0.01;
 
 % initialize the time variable
 t = 0;
-tSim = 10;
+tSim = 30;
 
 % Control Parameters
-KpInner = 1.2 * eye(6);
-KdInner = 10 * eye(6);
+KpInner = 4 * eye(6);
+KdInner = 40 * eye(6);
 
 % initial arm pos in joint
 theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
@@ -108,6 +124,13 @@ while t < tSim
         
 %       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
+        for i = 1:6
+           if qdotSim(index,i) > maxRadPerSec(i)
+               qdotSim(index,i) =  maxRadPerSec(i);
+           elseif qdotSim(index,i) < -maxRadPerSec(i)
+               qdotSim(index,i) =  -maxRadPerSec(i);
+           end
+        end
             % this calculation for the qdotSim is based on the previous time step calculation of the joint angles. this 
 %             WILL cause issues for calculation accuracy, but i hope the
 %             controller is robust enough to couteract these effects
@@ -120,7 +143,7 @@ while t < tSim
         [xSimG(index,1:3),xSimG(index,4:6)] = AR2FKZYZ(qSim(index,:));
         
         % inner control loop is here
-        xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSim(index,:)') + KpInner * (xd(index,:)' - xSim(index,:)'))';
+        xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';
     end
     
     
@@ -178,3 +201,5 @@ meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
 meanErrAcc = mean(errorInnerAcc);
 meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
 % units in mm
+
+toc
