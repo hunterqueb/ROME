@@ -152,47 +152,48 @@ index = index + 1;
 t = t + h;
 
 end
+tGraph = h:h:tSim;
+tGraph = tGraph';
 
 dimToView = 3;
 
 figure
-plot(xd(:,dimToView));
+plot(tGraph,xd(:,dimToView));
 hold on;
-plot(xSimG(:,dimToView));
-title('Corrected Inner Loop Position')
+plot(tGraph,xSimG(:,dimToView));
+% title('Corrected Inner Loop Position')
 grid on
-
-xlabel('Iterations','FontSize',12)
+xlabel('Time [s]','FontSize',12)
 ylabel('Position [mm]','FontSize',12)
 legend('Desired Position','Simulated Position')
 
 figure
-plot(xdotd(:,dimToView));
+plot(tGraph,xdotd(:,dimToView));
 hold on;
-plot(xdotSimG(:,dimToView));
-title('Corrected Inner Loop Velocity')
+plot(tGraph,xdotSimG(:,dimToView));
+% title('Corrected Inner Loop Velocity')
 grid on
 
-xlabel('Iterations','FontSize',12)
+xlabel('Time [s]','FontSize',12)
 ylabel('Velocity [mm/s]','FontSize',12)
 legend('Desired Velocity','Simulated Velocity')
 
 
 figure
-plot(xddotd(:,dimToView));
+plot(tGraph,xddotd(:,dimToView));
 hold on;
-plot(xddotSim(:,dimToView));
-title('Corrected Inner Loop Acceleration')
+plot(tGraph,xddotSim(:,dimToView));
+% title('Corrected Inner Loop Acceleration')
 grid on
 
-xlabel('Iterations','FontSize',12)
+xlabel('Time [s]','FontSize',12)
 ylabel('Acceleration [mm/s^2]','FontSize',12)
 legend('Desired Acceleration','Simulated Acceleration')
 
 
-errorInnerPos = xSimG - xd;
-errorInnerVel = xdotSimG - xdotd;
-errorInnerAcc = xddotSim - xddotd;
+errorInnerPos = xSimG(:,dimToView) - xd(:,dimToView);
+errorInnerVel = xdotSimG(:,dimToView) - xdotd(:,dimToView);
+errorInnerAcc = xddotSim(:,dimToView) - xddotd(:,dimToView);
 
 meanErrPos = mean(errorInnerPos);
 meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
