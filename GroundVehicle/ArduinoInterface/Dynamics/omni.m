@@ -11,6 +11,8 @@ classdef omni
         L  %m
         Iz %kg*m^2 (gv inertia, unknown)
         m  %platform mass, unknown
+        nummotors %num
+        open
 
         % constant matrices
         H 
@@ -39,6 +41,8 @@ classdef omni
             addParameter(p,'a1j2',[7.2 7.2 7.2]);
             addParameter(p,'a2j1',[400 400 400]);
             addParameter(p,'a2j2',[36 36 36]);
+            addParameter(p,'nummotors',3);
+            addParameter(p,'open',0);
             parse(p,varargin{:});
             
             obj.motor = p.Results.motor;
@@ -50,15 +54,23 @@ classdef omni
             obj.a1j2 = p.Results.a1j2;
             obj.a2j1 = p.Results.a2j1;
             obj.a2j2 = p.Results.a2j2;
+            obj.nummotors = p.Results.nummotors;
+            obj.open = p.Results.open;
             
             % Constant matrix setup
             obj.H = [1/obj.m 0 0;
                      0 1/obj.m 0;
                      0 0   1/obj.Iz;];
-
-            obj.B = [0 cos(pi/6) -cos(pi/6);
-                     -1 sin(pi/6)  sin(pi/6);
-                     obj.L         obj.L          obj.L;];
+            if obj.nummotors == 3
+                obj.B = [0 cos(pi/6) -cos(pi/6);
+                         -1 sin(pi/6)  sin(pi/6);
+                         obj.L         obj.L          obj.L;];
+            elseif obj.nummotors == 4
+                phi = pi/4;
+                obj.B = [-cos(phi) -cos(phi)  cos(phi) cos(phi);
+                          sin(phi) -sin(phi) -sin(phi) sin(phi);
+                          obj.L     obj.L     obj.L    obj.L];
+            end
             
             obj.G = eye(3) + obj.H*(obj.B*obj.B.')*obj.motor.n*obj.motor.n*obj.motor.J0/(obj.R^2) ;
         end
@@ -91,8 +103,8 @@ classdef omni
             v = trajDotB(2);
             r = trajDotB(3);
             
-            E = inv(H*B)*(R*Ra/(k2*n))*G*trajDoubleDotB ...
-                -inv(H*B)*(R*Ra/(k2*n))*[r*v;-r*u;0] ...
+            E = (H*B)\((R*Ra/(k2*n))*G*trajDoubleDotB) ...
+                -(H*B)\((R*Ra/(k2*n))*[r*v;-r*u;0]) ...
                 +B.'*(Ra*n/(k2*R))*(k2*k3/Ra + b0)*trajDotB;
         end
         
@@ -159,11 +171,16 @@ classdef omni
             a1j1 = obj.a1j1 * mod * expMod;
             a1j2 = obj.a1j2 * mod;
             
-            KI1 = -inv(B1)*diag(-a1j1);
-            KP1 = inv(B1)*(A1 - diag(-a1j2));
+            KI1 = -(B1)\diag(-a1j1);
+            KP1 = (B1)\(A1 - diag(-a1j2));
             
             KP1 = KP1;
             KI1 = KI1;
+            
+            if obj.open==1
+                KP1 = 0;
+                KI1 = 0;
+            end
         end
         
         
@@ -188,10 +205,10 @@ classdef omni
             v = trajDotB(2);
             r = trajDotB(3);
             
-            A2 = inv(G)*[0 r v;-r 0 -u;0 0 0]...
-            -inv(G)*H*(B*B.')*(k2*k3/Ra + b0)*(n^2/R^2);
+            A2 = (G)\[0 r v;-r 0 -u;0 0 0]...
+            -(G)\(H*(B*B.')*(k2*k3/Ra + b0)*(n^2/R^2));
         
-            B2 = inv(G)*H*B*(k2*n/(R*Ra));
+            B2 = (G)\(H*B*(k2*n/(R*Ra)));
             
             
             % Test
@@ -203,12 +220,17 @@ classdef omni
             a2j1 = obj.a2j1 * mod * expMod;
             a2j2 = obj.a2j2 * mod;
             
-            KI2 = -inv(B2)*diag(-a2j1);
-            KP2 = inv(B2)*(-A2 - diag(-a2j2));  
+            KI2 = -(B2)\diag(-a2j1);
+            KP2 = (B2)\(-A2 - diag(-a2j2));  
 
             
             KP2 = KP2;
-            KI2 = KI2;       
+            KI2 = KI2;
+            
+            if obj.open == 1
+                KP1 = 0;
+                KI1 = 0;
+            end
         end
         
         function [tilde1] = getTilde1(obj,pathW,error,errorSum)
@@ -241,8 +263,8 @@ classdef omni
             r = trajDotB(3);
             
             
-            accel = inv(G)*[r*v;-r*u;0] - inv(G)*H*B*B.'*(k2*k3/Ra + b0) ...
-                    *(n^2/R^2)*trajDotB + inv(G)*H*B*(k2*n/(R*Ra))*E;
+            accel = (G)\[r*v;-r*u;0] - (G)\(H*B*B.'*(k2*k3/Ra + b0) ...
+                    *(n^2/R^2)*trajDotB) + (G)\(H*B*(k2*n/(R*Ra))*E);
             
         end
         
@@ -338,17 +360,17 @@ classdef omni
                 
                 innerCommand = E + tilde2;
                 
-%                 for i = 1:3
-%                     if innerCommand(i) >= 12
-%                         %disp("POSITIVE SATURATED:");
-%                         %disp(innerCommand(i));
-%                         innerCommand(i) = 12;
-%                     elseif innerCommand(i) <= -12
-%                         innerCommand(i) = -12;
-%                         %disp("NEGATIVE SATURATED");
-%                         %disp(innerCommand(i));
-%                     end
-%                 end
+                for i = 1:3
+                    if innerCommand(i) >= 12
+                        disp("POSITIVE SATURATED:");
+                        disp(innerCommand(i));
+                        innerCommand(i) = 12;
+                    elseif innerCommand(i) <= -12
+                        innerCommand(i) = -12;
+                        disp("NEGATIVE SATURATED");
+                        disp(innerCommand(i));
+                    end
+                end
                         
                 
                 % Final application of control signal done in body frame
