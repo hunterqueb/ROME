@@ -1,0 +1,11 @@
+what do you want the final function to look like?
+
+    create dynamics arm class
+        will add kinematics back after dynamics are done
+        CONTAINS
+            DH parameters
+            arm parameters
+            RTB parameters
+            access to dynamics functions
+        call simulation or hardware
+            call default motion type or custom function
