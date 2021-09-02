@@ -7,5 +7,7 @@ what do you want the final function to look like?
             arm parameters
             RTB parameters
             access to dynamics functions
+        NEEDS
+            inertias function/inertia values inherint to class
         call simulation or hardware
             call default motion type or custom function
