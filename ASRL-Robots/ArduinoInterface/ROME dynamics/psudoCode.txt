@@ -1,0 +1,32 @@
+Mobile Manipulator Jacobian Transpose Algorithm
+
+from the desired x, xdot, and xddot which describes the desired motion of the end effector
+
+f_e_des = Kp * (x_e_des - x_e) + * Kd (xdot_e_des - xdot_e)
+
+Tau = MMJ'(theta, q) * f_e_des
+
+% MMJ is a 6x9 jacobian
+% Tau is a 9 column matrix of the forces of the robotic arm and gv
+
+
+while t < tSim
+
+xd = something
+xdot = something
+xddot = something
+
+xdotSim(index,:) = h*xddotSim(index-1,:) + xdotSim(index-1,:);
+xSim(index,:) = h*xdotSim(index,:) + xSim(index-1,:);
+
+qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
+qSim(index,:) = h*qdotSim(index,:) + qSim(index-1,:);
+
+
+f_e_des = Kp * (x_e_des - x_e) + * Kd (xdot_e_des - xdot_e)
+
+Tau = MMJ'(theta, q) * f_e_des
+
+// now we forward tau, a 9x1 matrix to be sent in a form in which the arm and gv can use for commands.
+
+end
