@@ -30,7 +30,6 @@ x_sim = x_des;
 xdot_sim = xdot_des;
 xddot_sim = xddot_des;
 
-
 for i = 1:length(t)
     x_des(i,:) = [radOfCircle*cos(2*pi*t(i)/tSim) radOfCircle*sin(2*pi*t(i)/tSim) verticalReach*sin(2*pi*t(i)/tSim) 0 0 0] + [state0',ori0'];
     xdot_des(i,:) = [radOfCircle*-sin(2*pi*t(i)/tSim)*2*pi/tSim radOfCircle*cos(2*pi*t(i)/tSim)*2*pi/tSim verticalReach*cos(2*pi*t(i)/tSim)*2*pi/tSim 0 0 0];
@@ -44,7 +43,14 @@ title("Desired Trajectory")
 
 for i = 1:length(t)
 %     main script to calc forces
-    
+    if i == 1
+    %   for initial conditions - assuming it starts at rest
+        x_sim(i,:) = [state0',ori0'];
+        xdot_sim(i,:) = zeros(1,6);
+        xddot_sim(i,:) = zeros(1,6);
+    else
+        
+    end
 end
 
 
