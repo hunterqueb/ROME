@@ -2,7 +2,7 @@ Mobile Manipulator Jacobian Transpose Algorithm
 
 from the desired x, xdot, and xddot which describes the desired motion of the end effector
 
-f_e_des = Kp * (x_e_des - x_e) + * Kd (xdot_e_des - xdot_e)
+f_e_des = Kp * (x_e_des - x_e) +  Kd * (xdot_e_des - xdot_e)
 
 Tau = MMJ'(theta, q) * f_e_des
 
