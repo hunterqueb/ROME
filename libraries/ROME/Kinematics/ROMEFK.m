@@ -1,24 +1,24 @@
 function [endEffPos, endEffOrient] = ROMEFK(jointStates)
 % INPUT - takes in the 9 joint states of the ROME platform, in the format
-%         of the the first 3 being the x, y, and yaw/psi of the gv in mm and 
-%         the last 6 being the joint states of the arm.
+%         of the the last 3 being the x, y, and yaw/psi of the gv in mm and 
+%         the first 6 being the joint states of the arm.
 
 % OUTPUT - outputs the pose - position and orientation of the end effector
 %          using the ZYZ rotation
 
 % MAKE SURE ROBOTICS TOOLBOX IS ADDED TO PATH
 % needs to be in mm
-xGV = jointStates(1);
-yGV = jointStates(2);
-psiGV = jointStates(3);
+xGV = jointStates(7);
+yGV = jointStates(8);
+psiGV = jointStates(9);
 
 
-theta1 = jointStates(4);
-theta2 = jointStates(5);
-theta3 = jointStates(6);
-theta4 = jointStates(7);
-theta5 = jointStates(8);
-theta6 = jointStates(9);
+theta1 = jointStates(1);
+theta2 = jointStates(2);
+theta3 = jointStates(3);
+theta4 = jointStates(4);
+theta5 = jointStates(5);
+theta6 = jointStates(6);
 
 
 % DH parameters for AR2
