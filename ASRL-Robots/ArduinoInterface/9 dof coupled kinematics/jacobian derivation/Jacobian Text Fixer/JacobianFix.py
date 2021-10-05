@@ -10,6 +10,9 @@ f.close()
 
 # replace operations in jacobion
 for num in range(6):
+    content = content.replace("theta" + str(num+1) + "(t)","theta" + str(num+1) + "")
+content = content.replace("psi(t)","psi")
+for num in range(6):
     content = content.replace("cos(theta"+str(num+1)+")","cth"+str(num+1))
     content = content.replace("sin(alpha"+str(num+1)+")","sal"+str(num+1))
     content = content.replace("sin(theta"+str(num+1)+")","sth"+str(num+1))
@@ -34,11 +37,11 @@ for num in range(6):
     Jac = Jac + "sal"+str(num+1)+ " = sin(alpha"+str(num+1)+");\n"
     Jac = Jac + "sth"+str(num+1)+ " = sin(theta"+str(num+1)+");\n"
     Jac = Jac + "cal"+str(num+1)+ " = cos(alpha"+str(num+1)+");\n\n"
-Jac = Jac + "[EEStates,~] = AR2FKZYZ(theta0(4:end));\n"
-Jac = Jac + "pc6_1 = EEStates(1);\npc6_2 = EEStates(2);\npc6_3 = 0;\npsi = theta0(3);\nL = 0.13*1000;\n"
+Jac = Jac + "pc6_1 = theta0(7);\n"
+Jac = Jac + "pc6_2 = theta0(8);\n"
+Jac = Jac + "psi = theta0(9);\n"
 Jac = Jac + "psiSin = sin(psi);\n"
 Jac = Jac + "psiCos = cos(psi);\n\n"
-
 Jac = Jac + "J = " + content
 Jac = Jac + "end"
 
