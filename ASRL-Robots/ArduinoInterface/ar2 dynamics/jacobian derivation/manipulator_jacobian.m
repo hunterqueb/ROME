@@ -1,4 +1,4 @@
- clear all; close all; clc;
+ clear all; close all;
 tic
 %% Inputs
 syms m1 m2 m3 m4 m5 m6 g
@@ -115,7 +115,7 @@ J5 = [Jv5; Jw5];
 J6 = [Jv6; Jw6];
 
 k = regexprep(char(J6),{'\(theta1\)','\(theta2\)','\(theta3\)','\(theta4\)','\(theta5\)','\(theta16\)'},{'\(theta1\(t\)\)', '\(theta2\(t\)\)', '\(theta3\(t\)\)', '\(theta4\(t\)\)', '\(theta5\(t\)\)', '\(theta6\(t\)\)'});
-Jdot = feval(symengine,'diff', k, t);
+% Jdot = feval(symengine,'diff', k, t);
 
 % theta1 = symfun(sym('theta1'),t);
 % theta2 = symfun(sym('theta2'),t);
