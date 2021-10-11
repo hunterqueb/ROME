@@ -54,16 +54,16 @@ gvStates = [10 0 0];
 % joints 1 - 6
 armStates = [0 0 0 0 0 0];
 
-robotqAnalytical = [gvStates,armStates];
+robotqAnalytical = [armStates,gvStates];
 % convert the angles from degrees to radians
-robotqAnalytical(3:end) = robotqAnalytical(3:end)* pi/180;
+robotqAnalytical(1:6) = robotqAnalytical(1:6)* pi/180;
 robotqToolbox = [rev1AngleLock,robotqAnalytical];
 
 gvMotorVel = [10;0;0];
 armAngleVel = [0;0;0;0;0;0];
-jointAngleVel = [gvMotorVel;armAngleVel];
-jointAngleVel(3:end) = jointAngleVel(3:end) * pi/180;
-jointAngleVelToolbox = [0;jointAngleVel];
+jointAngleVel = [armAngleVel;gvMotorVel];
+jointAngleVel(1:6) = jointAngleVel(1:6) * pi/180;
+jointAngleVelToolbox = [0;jointAngleVel(7:end);jointAngleVel(1:6)];
 
 RoboticsToolboxJacobianAnswer = Robot.jacob0(robotqToolbox) * jointAngleVelToolbox
 AnalyticalJacobianAnswer = J_ROME(robotqAnalytical) * jointAngleVel
