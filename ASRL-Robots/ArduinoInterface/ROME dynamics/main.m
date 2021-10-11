@@ -31,9 +31,9 @@ xdot_sim = xdot_des;
 xddot_sim = xddot_des;
 
 for i = 1:length(tVect)
-    x_des(i,:) = [radOfCircle*cos(2*pi*tVect(i)/tSim) radOfCircle*sin(2*pi*tVect(i)/tSim) verticalReach*sin(2*pi*tVect(i)/tSim) 0 0 0] + [state0',ori0'];
-    xdot_des(i,:) = [radOfCircle*-sin(2*pi*tVect(i)/tSim)*2*pi/tSim radOfCircle*cos(2*pi*tVect(i)/tSim)*2*pi/tSim verticalReach*cos(2*pi*tVect(i)/tSim)*2*pi/tSim 0 0 0];
-    xddot_des(i,:) = [radOfCircle*-cos(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 radOfCircle*-sin(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 verticalReach*cos(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 0 0 0];
+    x_des(i,:) = [radOfCircle*sin(2*pi*tVect(i)/tSim) radOfCircle*cos(2*pi*tVect(i)/tSim) verticalReach*sin(2*pi*tVect(i)/tSim) 0 0 0] + [0,0,state0(3),ori0'];
+    xdot_des(i,:) = [radOfCircle*cos(2*pi*tVect(i)/tSim)*2*pi/tSim radOfCircle*-sin(2*pi*tVect(i)/tSim)*2*pi/tSim verticalReach*cos(2*pi*tVect(i)/tSim)*2*pi/tSim 0 0 0];
+    xddot_des(i,:) = [radOfCircle*-sin(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 radOfCircle*-cos(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 verticalReach*cos(2*pi*tVect(i)/tSim)*(2*pi/tSim)^2 0 0 0];
 end
 
 figure
@@ -57,7 +57,7 @@ while t < tSim
         qdot_sim(index,:) = pinv(J_ROME(q_sim(index,:))) * xdot_sim(index,:)';
 
     else
-        %       forward integrate to get the task space motions
+%       forward integrate to get the task space motions
         xdot_sim(index,:) = h*xddot_sim(index-1,:) + xdot_sim(index-1,:);
         x_sim(index,:) = h*xdot_sim(index,:) + x_sim(index-1,:);
         
