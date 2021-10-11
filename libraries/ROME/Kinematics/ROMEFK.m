@@ -21,7 +21,7 @@ theta5 = jointStates(5);
 theta6 = jointStates(6);
 
 
-% DH parameters for AR2
+% DH parameters for AR2 in mm
 d1 = 169.77;    a1 = 64.2;  alpha1 = -90*pi/180;    
 d2 = 0;         a2 = 305;   alpha2 = 0;             
 d3 = 0;         a3 = 0;     alpha3 = 90*pi/180;     
