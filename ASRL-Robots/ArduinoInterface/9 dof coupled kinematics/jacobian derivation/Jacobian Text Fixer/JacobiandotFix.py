@@ -4,7 +4,7 @@ def rreplace(s, old, new, occurrence):
     return new.join(li)
 
 # open file and read its contents into a string variable
-f = open('J_ROME.txt', 'r')
+f = open('Jdot_ROME.txt', 'r')
 content = f.read()
 f.close()
 
@@ -43,6 +43,8 @@ for num in range(6):
 Jac = Jac + "psidot"+str(num+1)+" = thetadot0("+str(8+1)+");\n"
 Jac = Jac + "pc6_1 = theta0(7);\n"
 Jac = Jac + "pc6_2 = theta0(8);\n"
+Jac = Jac + "pc6_3 = 0;\n"
+Jac = Jac + "L = 150;\n"
 Jac = Jac + "psi = theta0(9);\n"
 Jac = Jac + "psiSin = sin(psi);\n"
 Jac = Jac + "psiCos = cos(psi);\n\n"
