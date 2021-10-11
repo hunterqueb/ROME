@@ -6,7 +6,7 @@ tVect = (h:h:tSim)';
 % initial arm pos in joint - rest
 theta0Arm = [0,-110*pi/180,141*pi/180,0,0,0];
 % inital gv pos in joint - at zero zero
-gvInitx = 0; % in mm
+gvInitx = 1000; % in mm
 gvInity = 0;
 gvYaw = 0;
 theta0GV = [gvInitx,gvInity,gvYaw];
@@ -41,13 +41,6 @@ plot3(x_des(:,1),x_des(:,2),x_des(:,3))
 grid on
 title("Desired Trajectory")
 
-figure
-plot3(xddot_des(:,1),xddot_des(:,2),xddot_des(:,3))
-grid on
-title("Desired Acceleration")
-
-
-
 KdInner = 1;
 KpInner = 1;
 t=0;
@@ -75,17 +68,21 @@ while t < tSim
 %             WILL cause issues for calculation accuracy, but i hope the
 %             controller is robust enough to couteract these effects
         q_sim(index,:) = h*qdot_sim(index,:) + q_sim(index-1,:);
-        
+        MMJ = J_ROME(q_sim(index,:));
+        MMJdot = Jdot_ROME(q_sim(index,:),qdot_sim(index,:));
 %       recalc the task space motions based on the new joint angle
 %       configuration estimations
-        xdot_simG(index,:) = J_ROME(q_sim(index,:)) * qdot_sim(index,:)';
+        xdot_simG(index,:) = MMJ * qdot_sim(index,:)';
         
         [x_simG(index,1:3),x_simG(index,4:6)] = ROMEFK(q_sim(index,:));
         
         % inner control loop is here
         xddot_sim(index,:) = (xddot_des(index,:)' + KdInner * (xdot_des(index,:)'-xdot_simG(index,:)') + KpInner * (x_des(index,:)' - x_simG(index,:)'))';
         
-        torques = J_ROME(q_sim(index,:))' * xddot_sim(index,:)';
+%         torques = J_ROME(q_sim(index,:))' * xddot_sim(index,:)';
+        qddot_sim = pinv(MMJ) * (xddot_sim(index,:)' - MMJdot*qdot_sim(index,:)');
+        
+        
         
     end
 index = index + 1;
@@ -100,6 +97,6 @@ title("Desired Acceleration")
 figure
 plot3(xddot_sim(:,1),xddot_sim(:,2),xddot_sim(:,3))
 grid on
-title("Desired Acceleration")
+title("Simulated Acceleration")
 
 
