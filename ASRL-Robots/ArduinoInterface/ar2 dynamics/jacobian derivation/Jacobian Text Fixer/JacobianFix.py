@@ -4,7 +4,7 @@ def rreplace(s, old, new, occurrence):
     return new.join(li)
 
 # open file and read its contents into a string variable
-f = open('Jacobiandot0.txt', 'r')
+f = open('Jacobian0.txt', 'r')
 content = f.read()
 f.close()
 
@@ -26,7 +26,7 @@ content = content.replace("matrix(","")
 content = rreplace(content,')',';\n',1)
 # remember to remove to last close parenthesis on the matrix
 
-Jac = "function J = Jacobiandot0_analytical(theta0,thetadot0)\n"
+Jac = "function J = Jacobiandot0_analyticalDiff(theta0)\n"
 
 Jac = Jac + "d1 = 169.77;    a1 = 64.2;  alpha1 = -90*pi/180;\nd2 = 0;         a2 = 305;   alpha2 = 0;\nd3 = 0;         a3 = 0;     alpha3 = 90*pi/180;\nd4 = -222.63;   a4 = 0;     alpha4 = -90*pi/180;\nd5 = 0;         a5 = 0;     alpha5 = 90*pi/180;\nd6 = -36.25;    a6 = 0;     alpha6 = 0;\n"
 
@@ -42,7 +42,7 @@ for num in range(6):
 Jac = Jac + "J = " + content
 Jac = Jac + "end"
 
-f = open('Jacobiandot0_analytical.m', 'w')
+f = open('Jacobian0_analyticalDiff.m', 'w')
 
 f.write(Jac)
 

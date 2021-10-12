@@ -12,7 +12,7 @@ f.close()
 for num in range(6):
     content = content.replace("diff(theta"+str(num+1)+"(t), t)","thetadot"+str(num+1))
     content = content.replace("theta" + str(num+1) + "(t)","theta" + str(num+1) + "")
-content = content.replace("diff(psi(t),t)","psidot")
+content = content.replace("diff(psi(t), t)","psidot")
 content = content.replace("psi(t)","psi")
 for num in range(6):
     content = content.replace("cos(theta"+str(num+1)+")","cth"+str(num+1))
@@ -24,9 +24,13 @@ content = content.replace("cos(psi)", "psiCos")
 
 
 # fix formatting
+content = rreplace(content,']',']];\n',1)
+content = content.replace("[","[[")
+content = content.replace(";","];\n[")
 content = content.replace("], ","];\n")
-content = content.replace("matrix(","")
-content = rreplace(content,')',';\n',1)
+# content = content.replace("], ","];\n")
+# content = content.replace("matrix(","")
+# content = rreplace(content,')',';\n',1)
 # remember to remove to last close parenthesis on the matrix
 
 Jac = "function J = Jdot_ROME(theta0,thetadot0)\n"
