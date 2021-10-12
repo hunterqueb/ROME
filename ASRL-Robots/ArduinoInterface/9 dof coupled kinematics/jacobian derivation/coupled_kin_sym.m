@@ -8,6 +8,8 @@
 
 % Edited by Hunter Quebedeaux Feb 2021, added support for setting base
 % frame offsets
+% Edited October 2021, added support for MATLAB versions > 2018a using
+% theta as a function of t
 clear all; close all;
 
 % % constants
@@ -80,44 +82,40 @@ pc30 = HT3 * pc3;
 pc40 = HT4 * pc4;
 pc50 = HT5 * pc5;
 pc60 = HT6 * pc6;
+% should this be
+% pc60 = HT6 * [0 0 0 1]';
 % Translational Jacobians
 theta = [theta1(t) theta2(t) theta3(t) theta4(t) theta5(t) theta6(t)];
 
-C_help = sym(zeros(3,6));
+Jv1 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc10(ii),theta);
+    Jv1(ii,:) = functionalDerivative(pc10(ii),theta);
 end
-Jv1(t) = C_help;
 
-C_help = sym(zeros(3,6));
+Jv2 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc20(ii),theta);
+    Jv2(ii,:) = functionalDerivative(pc20(ii),theta);
 end
-Jv2(t) = C_help;
 
-C_help = sym(zeros(3,6));
+Jv3 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc30(ii),theta);
+    Jv3(ii,:) = functionalDerivative(pc30(ii),theta);
 end
-Jv3(t) = C_help;
 
-C_help = sym(zeros(3,6));
+Jv4 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc40(ii),theta);
+    Jv4(ii,:) = functionalDerivative(pc40(ii),theta);
 end
-Jv4(t) = C_help;
 
-C_help = sym(zeros(3,6));
+Jv5 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc50(ii),theta);
+    Jv5(ii,:) = functionalDerivative(pc50(ii),theta);
 end
-Jv5(t) = C_help;
 
-C_help = sym(zeros(3,6));
+Jv6 = sym(zeros(3,6));
 for ii = 1:3
-    C_help(ii,:) = functionalDerivative(pc60(ii),theta);
+    Jv6(ii,:) = functionalDerivative(pc60(ii),theta);
 end
-Jv6(t) = C_help;
 
 % Rotational Jacobians
 Jw1 = [HT1(1:3,3) zeros(3,5)];
