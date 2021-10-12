@@ -1,9 +1,12 @@
  clear all; close all;
 tic
+% generates the jacobian of the manipulator using the new 2021a method,
+% where theta is a function of t as described by the symbolic toolbox
 %% Inputs
 syms m1 m2 m3 m4 m5 m6 g
 % DH parameters symbolic
 syms theta1 theta2 theta3 theta4 theta5 theta6
+syms theta1(t) theta2(t) theta3(t) theta4(t) theta5(t) theta6(t)
 syms t
 
 syms alpha1 alpha2 alpha3 alpha4 alpha5 alpha6
@@ -26,30 +29,56 @@ Ic4 = sym ('Ic4_',[3 3]);
 Ic5 = sym ('Ic5_',[3 3]);
 Ic6 = sym ('Ic6_',[3 3]);
 
-DH1 = [cos(theta1) -sin(theta1)*cos(alpha1) sin(theta1)*sin(alpha1) a1*cos(theta1);
-       sin(theta1) cos(theta1)*cos(alpha1) -cos(theta1)*sin(alpha1) a1*sin(theta1);
-        0           sin(alpha1)             cos(alpha1)             d1;
-        0 0 0 1];
-DH2 = [cos(theta2) -sin(theta2)*cos(alpha2) sin(theta2)*sin(alpha2)     a2*cos(theta2);
-        sin(theta2) cos(theta2)*cos(alpha2) -cos(theta2)*sin(alpha2)    a2*sin(theta2);
-        0           sin(alpha2)             cos(alpha2)                 d2;
+% DH1 = [cos(theta1) -sin(theta1)*cos(alpha1) sin(theta1)*sin(alpha1) a1*cos(theta1);
+%        sin(theta1) cos(theta1)*cos(alpha1) -cos(theta1)*sin(alpha1) a1*sin(theta1);
+%         0           sin(alpha1)             cos(alpha1)             d1;
+%         0 0 0 1];
+% DH2 = [cos(theta2) -sin(theta2)*cos(alpha2) sin(theta2)*sin(alpha2)     a2*cos(theta2);
+%         sin(theta2) cos(theta2)*cos(alpha2) -cos(theta2)*sin(alpha2)    a2*sin(theta2);
+%         0           sin(alpha2)             cos(alpha2)                 d2;
+%     0 0 0 1];
+% DH3 = [cos(theta3) -sin(theta3)*cos(alpha3) sin(theta3)*sin(alpha3) a3*cos(theta3);
+%     sin(theta3) cos(theta3)*cos(alpha3) -cos(theta3)*sin(alpha3)    a3*sin(theta3);
+%     0 sin(alpha3) cos(alpha3)                                       d3;
+%     0 0 0 1];
+% DH4 = [cos(theta4) -sin(theta4)*cos(alpha4) sin(theta4)*sin(alpha4) a4*cos(theta4);
+%     sin(theta4) cos(theta4)*cos(alpha4) -cos(theta4)*sin(alpha4) a4*sin(theta4);
+%     0 sin(alpha4) cos(alpha4) d4;
+%     0 0 0 1];
+% DH5 = [cos(theta5) -sin(theta5)*cos(alpha5) sin(theta5)*sin(alpha5) a5*cos(theta5);
+%     sin(theta5) cos(theta5)*cos(alpha5) -cos(theta5)*sin(alpha5) a5*sin(theta5);
+%     0 sin(alpha5) cos(alpha5) d5;
+%     0 0 0 1];
+% DH6 = [cos(theta6) -sin(theta6)*cos(alpha6) sin(theta6)*sin(alpha6) a6*cos(theta6);
+%     sin(theta6) cos(theta6)*cos(alpha6) -cos(theta6)*sin(alpha6) a6*sin(theta6);
+%     0 sin(alpha6) cos(alpha6) d6;
+%     0 0 0 1];
+
+DH1 = [cos(theta1(t)) -sin(theta1(t))*cos(alpha1) sin(theta1(t))*sin(alpha1) a1*cos(theta1(t));
+    sin(theta1(t)) cos(theta1(t))*cos(alpha1) -cos(theta1(t))*sin(alpha1) a1*sin(theta1(t));
+    0 sin(alpha1) cos(alpha1) d1;
     0 0 0 1];
-DH3 = [cos(theta3) -sin(theta3)*cos(alpha3) sin(theta3)*sin(alpha3) a3*cos(theta3);
-    sin(theta3) cos(theta3)*cos(alpha3) -cos(theta3)*sin(alpha3)    a3*sin(theta3);
-    0 sin(alpha3) cos(alpha3)                                       d3;
+DH2 = [cos(theta2(t)) -sin(theta2(t))*cos(alpha2) sin(theta2(t))*sin(alpha2) a2*cos(theta2(t));
+    sin(theta2(t)) cos(theta2(t))*cos(alpha2) -cos(theta2(t))*sin(alpha2) a2*sin(theta2(t));
+    0 sin(alpha2) cos(alpha2) d2;
     0 0 0 1];
-DH4 = [cos(theta4) -sin(theta4)*cos(alpha4) sin(theta4)*sin(alpha4) a4*cos(theta4);
-    sin(theta4) cos(theta4)*cos(alpha4) -cos(theta4)*sin(alpha4) a4*sin(theta4);
+DH3 = [cos(theta3(t)) -sin(theta3(t))*cos(alpha3) sin(theta3(t))*sin(alpha3) a3*cos(theta3(t));
+    sin(theta3(t)) cos(theta3(t))*cos(alpha3) -cos(theta3(t))*sin(alpha3) a3*sin(theta3(t));
+    0 sin(alpha3) cos(alpha3) d3;
+    0 0 0 1];
+DH4 = [cos(theta4(t)) -sin(theta4(t))*cos(alpha4) sin(theta4(t))*sin(alpha4) a4*cos(theta4(t));
+    sin(theta4(t)) cos(theta4(t))*cos(alpha4) -cos(theta4(t))*sin(alpha4) a4*sin(theta4(t));
     0 sin(alpha4) cos(alpha4) d4;
     0 0 0 1];
-DH5 = [cos(theta5) -sin(theta5)*cos(alpha5) sin(theta5)*sin(alpha5) a5*cos(theta5);
-    sin(theta5) cos(theta5)*cos(alpha5) -cos(theta5)*sin(alpha5) a5*sin(theta5);
+DH5 = [cos(theta5(t)) -sin(theta5(t))*cos(alpha5) sin(theta5(t))*sin(alpha5) a5*cos(theta5(t));
+    sin(theta5(t)) cos(theta5(t))*cos(alpha5) -cos(theta5(t))*sin(alpha5) a5*sin(theta5(t));
     0 sin(alpha5) cos(alpha5) d5;
     0 0 0 1];
-DH6 = [cos(theta6) -sin(theta6)*cos(alpha6) sin(theta6)*sin(alpha6) a6*cos(theta6);
-    sin(theta6) cos(theta6)*cos(alpha6) -cos(theta6)*sin(alpha6) a6*sin(theta6);
+DH6 = [cos(theta6(t)) -sin(theta6(t))*cos(alpha6) sin(theta6(t))*sin(alpha6) a6*cos(theta6(t));
+    sin(theta6(t)) cos(theta6(t))*cos(alpha6) -cos(theta6(t))*sin(alpha6) a6*sin(theta6(t));
     0 sin(alpha6) cos(alpha6) d6;
     0 0 0 1];
+
 % DH1 = formula(DH1);
 % DH2 = formula(DH2);
 % DH3 = formula(DH3);
@@ -89,15 +118,46 @@ pc40 = HT4 * pc4;
 pc50 = HT5 * pc5;
 pc60 = HT6 * [0 0 0 1]';
 
-theta = [theta1; theta2; theta3; theta4; theta5; theta6];
-% theta = formula(theta);
-Jv1 = jacobian(pc10(1:3),theta);
-Jv2 = jacobian(pc20(1:3),theta);
-Jv3 = jacobian(pc30(1:3),theta);
-Jv4 = jacobian(pc40(1:3),theta);
-Jv5 = jacobian(pc50(1:3),theta);
-Jv6 = jacobian(pc60(1:3),theta);
+% theta = [theta1; theta2; theta3; theta4; theta5; theta6];
+% % theta = formula(theta);
+% Jv1 = jacobian(pc10(1:3),theta);
+% Jv2 = jacobian(pc20(1:3),theta);
+% Jv3 = jacobian(pc30(1:3),theta);
+% Jv4 = jacobian(pc40(1:3),theta);
+% Jv5 = jacobian(pc50(1:3),theta);
+% Jv6 = jacobian(pc60(1:3),theta);
 
+theta = [theta1(t) theta2(t) theta3(t) theta4(t) theta5(t) theta6(t)];
+
+Jv1 = sym(zeros(3,6));
+for ii = 1:3
+    Jv1(ii,:) = functionalDerivative(pc10(ii),theta);
+end
+
+Jv2 = sym(zeros(3,6));
+for ii = 1:3
+    Jv2(ii,:) = functionalDerivative(pc20(ii),theta);
+end
+
+Jv3 = sym(zeros(3,6));
+for ii = 1:3
+    Jv3(ii,:) = functionalDerivative(pc30(ii),theta);
+end
+
+Jv4 = sym(zeros(3,6));
+for ii = 1:3
+    Jv4(ii,:) = functionalDerivative(pc40(ii),theta);
+end
+
+Jv5 = sym(zeros(3,6));
+for ii = 1:3
+    Jv5(ii,:) = functionalDerivative(pc50(ii),theta);
+end
+
+Jv6 = sym(zeros(3,6));
+for ii = 1:3
+    Jv6(ii,:) = functionalDerivative(pc60(ii),theta);
+end
 
 Jw1 = [HT1(1:3,3) zeros(3,5)];
 Jw2 = [HT1(1:3,3) HT2(1:3,3) zeros(3,4)];
@@ -114,8 +174,10 @@ J4 = [Jv4; Jw4];
 J5 = [Jv5; Jw5];
 J6 = [Jv6; Jw6];
 
-k = regexprep(char(J6),{'\(theta1\)','\(theta2\)','\(theta3\)','\(theta4\)','\(theta5\)','\(theta16\)'},{'\(theta1\(t\)\)', '\(theta2\(t\)\)', '\(theta3\(t\)\)', '\(theta4\(t\)\)', '\(theta5\(t\)\)', '\(theta6\(t\)\)'});
+% k = regexprep(char(J6),{'\(theta1\)','\(theta2\)','\(theta3\)','\(theta4\)','\(theta5\)','\(theta16\)'},{'\(theta1\(t\)\)', '\(theta2\(t\)\)', '\(theta3\(t\)\)', '\(theta4\(t\)\)', '\(theta5\(t\)\)', '\(theta6\(t\)\)'});
 % Jdot = feval(symengine,'diff', k, t);
+
+Jdot = diff(J6,t);
 
 % theta1 = symfun(sym('theta1'),t);
 % theta2 = symfun(sym('theta2'),t);
@@ -123,6 +185,8 @@ k = regexprep(char(J6),{'\(theta1\)','\(theta2\)','\(theta3\)','\(theta4\)','\(t
 % theta4 = symfun(sym('theta4'),t);
 % theta5 = symfun(sym('theta5'),t);
 % theta6 = symfun(sym('theta6'),t);
+
+
 
 fid1 = fopen('Jacobian0.txt','wt');
 fprintf(fid1, '%s \n', char(J6));
