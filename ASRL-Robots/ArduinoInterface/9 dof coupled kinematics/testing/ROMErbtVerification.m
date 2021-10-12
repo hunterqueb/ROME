@@ -66,6 +66,7 @@ jointAngleVel(1:6) = jointAngleVel(1:6) * pi/180;
 jointAngleVelToolbox = [0;jointAngleVel(7:end);jointAngleVel(1:6)];
 
 RoboticsToolboxJacobianAnswer = Robot.jacob0(robotqToolbox) * jointAngleVelToolbox
+Robot.jacob_dot
 AnalyticalJacobianAnswer = J_ROME(robotqAnalytical) * jointAngleVel
 
 
