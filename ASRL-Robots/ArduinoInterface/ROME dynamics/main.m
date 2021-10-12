@@ -1,3 +1,7 @@
+% Robot.jacob0(robotqToolbox)
+% Robot.jacob_dot
+% rewrite using these functions
+
 % initialize the time vector
 tSim = 30; % in sec - time for total sim time
 h = 0.01;
