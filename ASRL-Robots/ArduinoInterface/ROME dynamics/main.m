@@ -1,5 +1,5 @@
 % Robot.jacob0(robotqToolbox)
-% Robot.jacob_dot
+% Robot.jacob_dot(robotqToolbox,robotqdotToolbox)
 % rewrite using these functions
 
 % initialize the time vector
