@@ -143,7 +143,8 @@ while t < tSim
         [xSimG(index,1:3),xSimG(index,4:6)] = AR2FKZYZ(qSim(index,:));
         
         % inner control loop is here
-        xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';
+        xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';  
+    
     end
     
     

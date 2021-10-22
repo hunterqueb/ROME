@@ -1,3 +1,5 @@
+% The order for computing the dynamics is as follows. Starting with the desired Cartesian equations of motion, the closed loop task space dynamics for the robotic manipulator and ground vehicle are computed separately. Once calculated, the task space motion is converted to joint space, the torque via inverse dynamics are calculated using the transfer of forces by equation \eqref{eq:dynamicCoupling}, the joint space accelerations are calculated via the forward dynamics, and the joint accelerations are converted back to task space.
+
 %AR2 RNE Dynamics Model
 % http://www.petercorke.com/RTB/r9/html/Link.html
 % Bm: link viscous friction- Link.B
@@ -80,7 +82,6 @@ end
 h = 0.01;
 
 % initialize the time variable
-t = 0;
 tSim = 30;
 
 % Control Parameters
@@ -97,19 +98,34 @@ maxSinAmount = 200;
 
 planarOrbitRadius = 1000;
 
+circle = Circle(tSim,1000,0);
+omni = omni();
+[t,result] = omni.trajectory(circle);
+
+pathW = circle.getPathW(t);
+pathX = pathW(:,1);
+pathY = pathW(:,2);
+pathTheta = pathW(:,3);
+
+xi = linspace(0, tSim, tSim/h);
+
+pathX = interp1(t, pathX, xi, 'linear','extrap');
+pathY = interp1(t, pathY, xi, 'linear','extrap');
+
+t = 0;
 index = 1;
 while t < tSim
 % 
 % 
 % 
-    GVx(index) = planarOrbitRadius*sin(t/tSim);
-    GVy(index) = planarOrbitRadius*cos(t/tSim);
+    GVx(index) = planarOrbitRadius*cos(2*pi*t/tSim);
+    GVy(index) = planarOrbitRadius*sin(2*pi*t/tSim);
     
-    GVxdot(index) = planarOrbitRadius*1/tSim*cos(t/tSim);
-    GVydot(index) = planarOrbitRadius*1/tSim*-sin(t/tSim);
+    GVxdot(index) = planarOrbitRadius*2*pi/tSim*-sin(2*pi*t/tSim);
+    GVydot(index) = planarOrbitRadius*2*pi/tSim*cos(2*pi*t/tSim);
     
-    GVxddot(index) = planarOrbitRadius*(1/tSim)^2*-sin(t/tSim);
-    GVyddot(index) = planarOrbitRadius*(1/tSim)^2*-cos(t/tSim);
+    GVxddot(index) = planarOrbitRadius*(2*pi/tSim)^2*-cos(2*pi*t/tSim);
+    GVyddot(index) = planarOrbitRadius*(2*pi/tSim)^2*-sin(2*pi*t/tSim);
 
 
     %   desired equations of motion
@@ -118,6 +134,9 @@ while t < tSim
     xdotd(index,:) = [0,0,maxSinAmount*cos(2*pi*t/tSim) * 2 * pi / tSim,0,0,0];
     xddotd(index,:) = [0,0,maxSinAmount*-sin(2*pi*t/tSim) * (2 * pi / tSim)^2,0,0,0];
     
+    xdTot(index,:) = xd(index,:) + [GVx(index),GVy(index),0,0,0,0];
+    xdotdTot(index,:) = xdotd(index,:) + [GVxdot(index),GVydot(index),0,0,0,0];
+    xddotdTot(index,:) = xddotd(index,:) + [GVxddot(index),GVyddot(index),0,0,0,0];
 %   inital conditions
     xIC(index,:) = [state0',ori0'];
     xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
@@ -132,6 +151,10 @@ while t < tSim
         
         qSim(index,:) = theta0;
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
+        
+        qdotCoupled(index,:) = [0,0,0,0,0,0];
+        qCoupled(index,:) = theta0;
+
     else
 %       forward integrate to get the task space motions
         xdotSim(index,:) = h*xddotSim(index-1,:) + xdotSim(index-1,:);
@@ -162,9 +185,35 @@ while t < tSim
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';
         
-        xSimTot(index,:) = xSimG(index,:) + [GVx(index),GVy(index),0,0,0,0];
-        xdotSimTot(index,:) = xdotSimG(index,:) + [GVxdot(index),GVydot(index),0,0,0,0];
-        xddotSimTot(index,:) = xddotSim(index,:) + [GVxddot(index),GVyddot(index),0,0,0,0];
+        xSimTot(index,:) = xSimG(index,:) + [pathX(index),pathY(index),0,0,0,0];
+        
+        %       convert to qddot using qsim and qddot sim,
+        
+        
+        qddotSim(index,:) = ((pinv(Jacobian0_analytical(qSim(index,:)))*(xddotSim(index,:)') - Robot.jacob_dot(qSim(index,:)',qdotSim(index,:)')))';
+        
+        
+        GVForces = [GVxddot(index)/1000,GVyddot(index)/1000,9.81]';
+        tau(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:),GVForces);
+        CandGVectors(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),zeros(1,6));
+
+        Robot.gravity = [0 0 0]';
+
+        for i = 1:6
+            qddotMass = zeros(1,6);
+            qddotMass(i) = 1;
+            M(index,:,i) = Robot.rne(qSim(index,:),zeros(1,6),qddotMass);
+
+        end
+
+        MMat = squeeze(M(index,:,:));
+        qddotCoupled(index,:) = pinv(MMat)*(tau(index,:)' - CandGVectors(index,:)');
+        qdotCoupled(index,:) = h*qddotCoupled(index,:) + qdotCoupled(index-1,:);
+        qCoupled(index,:) = h*qdotCoupled(index,:) + qCoupled(index-1,:);
+
+        xddotCoupled(index,:) = ((Jacobian0_analytical(qSim(index,:)) * qddotSim(index,:)') + Robot.jacob_dot(qSim(index,:),qdotSim(index,:)))';
+% take qddot convert back to task space -- coupled
+
     end
     
     
@@ -224,4 +273,19 @@ meanErrAcc = mean(errorInnerAcc);
 meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
 % units in mm
 
+figure; hold on;
+plot3(xdTot(:,1),xdTot(:,2),xdTot(:,3))
+plot3(xSimTot(:,1),xSimTot(:,2),xSimTot(:,3))
+
+error = xSimTot - xdTot;
+figure; hold on;
+plot(tGraph(2:end),error(2:end,1))
+plot(tGraph(2:end),error(2:end,2))
+plot(tGraph(2:end),error(2:end,3))
+
+
+figure
+plot(xddotd(:,3))
+hold on
+plot(xddotCoupled(:,3))
 toc
