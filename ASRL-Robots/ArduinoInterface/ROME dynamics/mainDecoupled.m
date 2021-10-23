@@ -107,10 +107,15 @@ pathX = pathW(:,1);
 pathY = pathW(:,2);
 pathTheta = pathW(:,3);
 
+pathXdot = pathW(:,4);
+pathYdot = pathW(:,5);
+
 xi = linspace(0, tSim, tSim/h);
 
 pathX = interp1(t, pathX, xi, 'linear','extrap');
 pathY = interp1(t, pathY, xi, 'linear','extrap');
+pathXdot = interp1(t, pathXdot, xi, 'linear','extrap');
+pathYdot = interp1(t, pathYdot, xi, 'linear','extrap');
 
 t = 0;
 index = 1;
@@ -177,7 +182,8 @@ while t < tSim
 %       recalc the task space motions based on the new joint angle
 %       configuration estimations
         xdotSimG(index,:) = Jacobian0_analytical(qSim(index,:)) * qdotSim(index,:)';
-        
+        xdotSimTot(index,:) = xdotSimG(index,:) + [pathXdot(index),pathYdot(index),0,0,0,0];
+
         
         [xSimG(index,1:3),xSimG(index,4:6)] = AR2FKZYZ(qSim(index,:));
         
@@ -292,7 +298,17 @@ hold on
 plot(xddotCoupled(:,3))
 toc
 
-xddotCoupledError = xddotd - xddotCoupled;
+xddotCoupledError = xddotdTot - xddotCoupled;
+
+xdotCoupled(1,:) = xdotSimTot(1,:);
+xCoupled(1,:) = xSimTot(1,:);
+
+for index = 2:length(xddotCoupled(:,1))
+    xdotCoupled(index,:) = h*xddotCoupled(index,:) + xdotCoupled(index-1,:);
+    xCoupled(index,:) = h*xdotCoupled(index,:) + xCoupled(index-1,:);
+end
+
+
 
 figure;hold on;grid on
 plot(tGraph,xddotCoupledError(:,1));
