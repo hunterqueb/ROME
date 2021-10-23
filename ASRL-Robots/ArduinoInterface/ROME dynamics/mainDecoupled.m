@@ -194,6 +194,8 @@ while t < tSim
         
         
         GVForces = [GVxddot(index)/1000,GVyddot(index)/1000,9.81]';
+        GVForces = [GVxddot(index),GVyddot(index),9.81]';
+
         tau(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:),GVForces);
         CandGVectors(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),zeros(1,6));
 
@@ -289,3 +291,10 @@ plot(xddotd(:,3))
 hold on
 plot(xddotCoupled(:,3))
 toc
+
+xddotCoupledError = xddotd - xddotCoupled;
+
+figure;hold on;grid on
+plot(tGraph,xddotCoupledError(:,1));
+plot(tGraph,xddotCoupledError(:,2));
+plot(tGraph,xddotCoupledError(:,3));
