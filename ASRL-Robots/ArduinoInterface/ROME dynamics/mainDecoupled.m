@@ -19,7 +19,6 @@ L(4) = Link([0 -222.63/1000 0 -1.5707], 'R');
 L(5) = Link([0 0 0 1.5707], 'R');
 L(6) = Link([pi -36.25/1000 0 0], 'R');
 
-
 %load inertia matrices
 inertias
 
@@ -180,16 +179,16 @@ while t < tSim
     xdotdTot(index,:) = xdotd(index,:) + [GVxdot(index),GVydot(index),0,0,0,0];
     xddotdTot(index,:) = xddotd(index,:) + [GVxddot(index),GVyddot(index),0,0,0,0];
 %   inital conditions
-    xIC(index,:) = [state0',ori0'];
-    xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
-	xddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
+    xIC = [state0',ori0'];
+    xdotIC = [0, 0, 0, 0, 0, 0];
+	xddotIC = [0, 0, 0, 0 ,0 ,0];
     
 %   on first pass, set the IC to first array index for all the simulated
 %   configurations
     if index == 1
-        xSim(index,:) = xIC(index,:);
-        xdotSim(index,:) = xdotIC(index,:);
-        xddotSim(index,:) = xddotIC(index,:);
+        xSim(index,:) = xIC;
+        xdotSim(index,:) = xdotIC;
+        xddotSim(index,:) = xddotIC;
         
         qSim(index,:) = theta0;
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
@@ -236,10 +235,9 @@ while t < tSim
         qddotSim(index,:) = ((pinv(Jacobian0_analytical(qSim(index,:)))*(xddotSim(index,:)') - Robot.jacob_dot(qSim(index,:)',qdotSim(index,:)')))';
         
         
-        GVForces = [GVxddot(index)/1000,GVyddot(index)/1000,9.81]';
         GVForces = [GVxddot(index),GVyddot(index),9.81]';
-
-        tau(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:),GVForces);
+        Robot.gravity = GVForces;
+        tau(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:)); %,'gravity',GVForces
         CandGVectors(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),zeros(1,6));
 
         Robot.gravity = [0 0 0]';
