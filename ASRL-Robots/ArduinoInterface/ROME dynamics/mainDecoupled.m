@@ -119,6 +119,43 @@ pathYdot = interp1(t, pathYdot, xi, 'linear','extrap');
 
 t = 0;
 index = 1;
+
+% preallocation
+sizeOfArray = tSim/h;
+GVx = zeros(sizeOfArray,1);
+GVy = zeros(sizeOfArray,1);
+GVxdot = zeros(sizeOfArray,1);
+GVydot = zeros(sizeOfArray,1);
+GVxddot = zeros(sizeOfArray,1);
+GVyddot = zeros(sizeOfArray,1);
+xd = zeros(sizeOfArray,6);
+xdotd = zeros(sizeOfArray,6);
+xddotd = zeros(sizeOfArray,6);
+    
+xdTot = zeros(sizeOfArray,6);
+xdotdTot = zeros(sizeOfArray,6);
+xddotdTot = zeros(sizeOfArray,6);
+
+xSim = zeros(sizeOfArray,6);
+xdotSim = zeros(sizeOfArray,6);
+xddotSim = zeros(sizeOfArray,6);
+
+qSim = zeros(sizeOfArray,6);
+qdotSim = zeros(sizeOfArray,6);
+
+qdotCoupled = zeros(sizeOfArray,6);
+qCoupled = zeros(sizeOfArray,6);
+xdotSimG = zeros(sizeOfArray,6);
+xdotSimTot = zeros(sizeOfArray,6);
+xSimG = zeros(sizeOfArray,6);
+xSimTot = zeros(sizeOfArray,6);
+qddotSim = zeros(sizeOfArray,6);
+
+tau = zeros(sizeOfArray,6);
+CandGVectors = zeros(sizeOfArray,6);
+qddotCoupled = zeros(sizeOfArray,6);
+xddotCoupled = zeros(sizeOfArray,6);
+
 while t < tSim
 % 
 % 
