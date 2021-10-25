@@ -321,31 +321,39 @@ plot3(xdTot(:,1),xdTot(:,2),xdTot(:,3))
 plot3(xSimTot(:,1),xSimTot(:,2),xSimTot(:,3))
 
 error = xSimTot - xdTot;
-figure; hold on;
+figure; hold on; grid on;
 plot(tGraph(2:end),error(2:end,1))
 plot(tGraph(2:end),error(2:end,2))
 plot(tGraph(2:end),error(2:end,3))
+legend('Task Space Position Error in x','Task Space Position Error in y','Task Space Position Error in z');
+xlabel('Time [sec]')
+ylabel('Position Error [mm]')
 
+figure;
+plot3(xSimTot(2:end,1),xSimTot(2:end,2),xSimTot(2:end,3))
+grid on;
+xlabel('x [mm]')
+ylabel('y [mm]')
+zlabel('z [mm]')
+legend('Simulated "Orbit-like" Trajectory')
 
-figure
-plot(xddotd(:,3))
-hold on
-plot(xddotCoupled(:,3))
 toc
 
-xddotCoupledError = xddotdTot - xddotCoupled;
+xddotCoupledError = xddotd - xddotCoupled;
 
-xdotCoupled(1,:) = xdotSimTot(1,:);
-xCoupled(1,:) = xSimTot(1,:);
-
-for index = 2:length(xddotCoupled(:,1))
-    xdotCoupled(index,:) = h*xddotCoupled(index,:) + xdotCoupled(index-1,:);
-    xCoupled(index,:) = h*xdotCoupled(index,:) + xCoupled(index-1,:);
-end
-
+% xdotCoupled(1,:) = xdotSimTot(1,:);
+% xCoupled(1,:) = xSimTot(1,:);
+% 
+% for index = 2:length(xddotCoupled(:,1))
+%     xdotCoupled(index,:) = h*xddotCoupled(index,:) + xdotCoupled(index-1,:);
+%     xCoupled(index,:) = h*xdotCoupled(index,:) + xCoupled(index-1,:);
+% end
 
 
 figure;hold on;grid on
-plot(tGraph,xddotCoupledError(:,1));
-plot(tGraph,xddotCoupledError(:,2));
-plot(tGraph,xddotCoupledError(:,3));
+plot(tGraph(10:end),xddotCoupledError(10:end,1));
+plot(tGraph(10:end),xddotCoupledError(10:end,2));
+plot(tGraph(10:end),xddotCoupledError(10:end,3));
+legend('Task Space Acceleration Error in x','Task Space Acceleration Error in y','Task Space Acceleration Error in z')
+xlabel('Time [sec]')
+ylabel('Acceleration Error [mm/s^2]')
