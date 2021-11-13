@@ -174,10 +174,12 @@ J4 = [Jv4; Jw4];
 J5 = [Jv5; Jw5];
 J6 = [Jv6; Jw6];
 
+simpJ6 = simplify(J6);
 % k = regexprep(char(J6),{'\(theta1\)','\(theta2\)','\(theta3\)','\(theta4\)','\(theta5\)','\(theta16\)'},{'\(theta1\(t\)\)', '\(theta2\(t\)\)', '\(theta3\(t\)\)', '\(theta4\(t\)\)', '\(theta5\(t\)\)', '\(theta6\(t\)\)'});
 % Jdot = feval(symengine,'diff', k, t);
 
 Jdot = diff(J6,t);
+simpJdot = simplify(Jdot);
 
 % theta1 = symfun(sym('theta1'),t);
 % theta2 = symfun(sym('theta2'),t);
@@ -189,10 +191,10 @@ Jdot = diff(J6,t);
 
 
 fid1 = fopen('Jacobian0.txt','wt');
-fprintf(fid1, '%s \n', char(J6));
+fprintf(fid1, '%s \n', char(simpJ6));
 
 fid2 = fopen('Jacobiandot0.txt','wt');
-fprintf(fid2, '%s \n', char(Jdot));
+fprintf(fid2, '%s \n', char(simpJdot));
 
 fclose(fid1);
 fclose(fid2);
