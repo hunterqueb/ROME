@@ -1,6 +1,6 @@
 classdef AR3Serial
     %AR3Serial Summary of this class goes here
-    %   Detailed explanation goes here
+    %   Detailed explanation goes here df
     
     properties(Access = private, Constant = true)
         STEPPER_CREATE = uint8(1);
@@ -32,12 +32,12 @@ classdef AR3Serial
 
     properties(Access = private, Constant = true)
         %Steps/radian for each stepper
-        STEPPER_CONSTANT1 = 1/(.022368421*(pi/180));
-        STEPPER_CONSTANT2 = 1/(.018082192*(pi/180));
-        STEPPER_CONSTANT3 = 1/(.017834395*(pi/180));
-        STEPPER_CONSTANT4 = 1/(.021710526*(pi/180));
-        STEPPER_CONSTANT5 = 1/(.045901639*(pi/180));
-        STEPPER_CONSTANT6 = 1/(.046792453*(pi/180));
+        STEPPER_CONSTANTS = [1/((.022368421*2)*(pi/180)), ...
+                             1/(.018082192*(pi/180)), ...
+                             1/(.017834395*(pi/180)), ...
+                             1/(.021710526*(pi/180)), ...
+                             1/(.045901639*(pi/180)), ...
+                             1/(.046792453*(pi/180))];
     end
     
     methods
@@ -50,6 +50,16 @@ classdef AR3Serial
         function [] = calibrate(obj)
             CMD = obj.CALIBRATE;
             writePacket(obj.serial,CMD);
+        end
+        
+        function [steps] = read(obj,ID)
+            CMD = obj.READ;
+            data = uint8([CMD,ID]);
+            
+            writePacket(obj.serial,data);
+            
+            binarySteps = readPacket(obj.serial);
+            steps = typecast(uint8(binarySteps(1:4)),'int32');
         end
          
         function [stepsArray] = read_all(obj)
@@ -65,6 +75,7 @@ classdef AR3Serial
             end
         end
         
+        % Not Implemented
         function [] = updateSteppers(obj,radSecArray)
             CMD = obj.UPDATE_STEPPERS;
 
@@ -73,6 +84,30 @@ classdef AR3Serial
             
             data = [CMD, countsSecArrayBin];
             
+            writePacket(obj.serial,data);
+        end
+        
+        function [] = setStates(obj,states,ID)
+            CMD = obj.SET_STATES;
+            ID = uint8(ID);
+            
+            % Check limits
+            if (states(1) >= obj.CCWLimit(ID+1))
+                    states(1) = obj.CCWLimit(ID+1);
+            elseif (states(1) <= obj.CWLimit(ID+1))
+                    states(1) = obj.CWLimit(ID+1);
+            end
+            
+            states = states * obj.STEPPER_CONSTANTS(ID+1);
+            
+            disp(states)
+            
+            position = [typecast(int32(states(1)),'uint8')];
+            velocity = [typecast(single(states(2)),'uint8')];
+
+            
+            data = [CMD,ID,position,velocity];
+            disp(data)
             writePacket(obj.serial,data);
         end
          
@@ -85,11 +120,25 @@ classdef AR3Serial
                 elseif (statesArray(i) <= obj.CWLimit(i))
                     statesArray(i) = obj.CWLimit(i);
                 end
+                % Convert position to steps
+                statesArray(i) = statesArray(i) * obj.STEPPER_CONSTANTS(i);
+                % Convert velocity to steps
+                statesArray(i+6) = statesArray(i+6) * obj.STEPPER_CONSTANTS(i);
             end
             
-            positions = typecast(int32(statesArray(1:6)*obj.STEPPER_CONSTANT1),'uint8');
-            velocities = typecast(single(statesArray(7:12)*obj.STEPPER_CONSTANT1),'uint8');
+            
+            posArray = int32(statesArray(1:6));
+            velArray = single(statesArray(7:12));
+            positions = typecast(posArray,'uint8');
+            velocities = typecast(velArray,'uint8');
             data = [CMD,positions,velocities];
+            
+            disp("States ARray");
+            disp(statesArray);
+            disp("Positions");
+            disp(positions);
+            disp("Velocities");
+            disp(velocities);
             
             writePacket(obj.serial,data);
             
@@ -101,6 +150,7 @@ classdef AR3Serial
            end
         end
         
+        % Not Implemented
         function [] = set(obj,statesArray)
             CMD = obj.SET;
 

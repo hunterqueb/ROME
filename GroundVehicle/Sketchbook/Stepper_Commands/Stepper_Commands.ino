@@ -13,9 +13,22 @@
 
 PacketSerial packetizer;
 
+// Number of steppers
+int NUM = 6;
+int posMode = 0;
+
 // Expressed in Joint frame
 long steps[6] = {0,0,0,0,0,0};
 float stepsSec[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+
+// Steps per degree for each motor
+float stepsDeg[6] = {1/(.022368421*2),1/.018082192,
+                     1/.017834395,1/.021710526,
+                     1/.045901639,1/.046792453};
+
+// Limits of each joint, degrees from zero. Expressed in Motor frame.
+// J2,J3,and J5 reversed here.
+float limits[6] = {-170.0,132.0,-141.0,-155.0,105.0,-155.0};
 
 // Assign pin numbers to stepper
 byte pinNumbers[6][2] = {{2,3},{4,5},{6,7},{8,9},{10,11},{12,13}};
@@ -41,7 +54,6 @@ void setup()
   // Packetizer Setup
   packetizer.begin(19200);
   packetizer.setPacketHandler(&onPacketReceived);
-
 }
 
 void loop() 
@@ -58,8 +70,31 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
 
   switch(CMD)
   {
-    case UPDATE_STEPPERS:
+    case SET_STATES:
     {
+      byte ID = buffer[1];
+      posMode = 1;
+
+      byte targetPos[4];
+      byte targetVelocity[4];
+
+      for (int i = 0; i < 4;i++)
+      {
+        targetPos[i] = buffer[i+2];
+        targetVelocity[i] = buffer[i+2+4];
+      }
+
+      // Cast 4-byte array to long 
+      steps[ID] = *((long*)targetPos);
+      // Cast 4-byte array to float
+      stepsSec[ID] = *((float*)targetVelocity);
+      break;
+    }
+    
+    case UPDATE_STATES:
+    {
+      posMode = 1;
+      
       byte targetPositions[6][4];
       byte targetVelocities[6][4];
 
@@ -70,7 +105,7 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
         {
           int index = i*4 + j + 1;
           targetPositions[i][j] = buffer[index];
-          targetVelocities[i][j] = buffer[index + 25];
+          targetVelocities[i][j] = buffer[index + 24];
         }
       }
 
@@ -85,9 +120,61 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
 
       break;
     }
+    case READ:
+    {
+      byte ID = buffer[1];
+      int32_t count = steppers[ID].currentPosition();
+
+      byte result[4];
+      
+      result[0] = (count & 0x000000ff);
+      result[1] = (count & 0x0000ff00) >> 8;
+      result[2] = (count & 0x00ff0000) >> 16;
+      result[3] = (count & 0xff000000) >> 24;
+
+      packetizer.send(result,sizeof(result));
+      break;
+    }
+    case READ_ALL:
+    {
+      int32_t position[6];
+      byte result[4*NUM];
+
+      for (int i = 0;i < NUM;i++)
+      {
+        position[i] = steppers[i].currentPosition();
+
+        result[4*i] = (position[i] & 0x000000ff);
+        result[4*i+1] = (position[i] & 0x0000ff00) >> 8;
+        result[4*i+2] = (position[i] & 0x00ff0000) >> 16;
+        result[4*i+3] = (position[i] & 0xff000000) >> 24;
+      }
+
+      packetizer.send(result,sizeof(result));
+      break;
+    }
+    case CALIBRATE:
+    {
+      for(int i = 0;i < 6;i++)
+      {
+        // Set current position in Motor frame
+        steppers[i].setCurrentPosition((long)(limits[i]*stepsDeg[i]));
+
+        // Check for reversed action
+        if ((i == 1) || (i == 2) || (i == 4))
+          // If reversed, must transform to Joint frame
+          steps[i] = -(long)(limits[i]*stepsDeg[i]);
+        else
+          steps[i] = (long)(limits[i]*stepsDeg[i]);
+
+        stepsSec[i] = 0.0;
+      }
+      break;
+    }
     default:
     {
       // do nothing
+      break;
     }
   }
 }
@@ -95,17 +182,26 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
 void updateSteppers()
 {
   int reversed;
-  
-  // Update steppers
-  for (int i = 0; i < 6; i++)
+
+  if (posMode = 1)
   {
-    if (i == 1 || i == 2 || i ==4)
-      reversed = -1;
-    else
-      reversed = 1;
-    
-    steppers[i].moveTo(reversed * steps[i]);
-    steppers[i].setSpeed(stepsSec[i]);
-    steppers[i].runSpeedToPosition();
+    // Update steppers
+    for (int i = 0; i < 6; i++)
+    {
+      if ((i == 1) || (i == 2) || (i == 4) || (i == 5))
+        reversed = -1;
+      else
+        reversed = 1;
+      
+      steppers[i].moveTo(reversed * steps[i]);
+      // NOTE: Not sure this does anything
+      steppers[i].setSpeed(-stepsSec[i]);
+      steppers[i].runSpeedToPosition();
+    }
+  }
+  else
+  {
+    for (int i = 0;i < 6;i++)
+      steppers[i].runSpeed();
   }
 }
