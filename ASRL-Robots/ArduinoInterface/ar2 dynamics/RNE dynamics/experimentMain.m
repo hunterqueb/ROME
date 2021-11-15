@@ -8,7 +8,10 @@
 
 %DH First, then inertia matrices for each 
 
-clear
+
+% theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
+
+
 
 
 %% NatNet Connection
@@ -27,10 +30,10 @@ end
 
 %% Move to initial position
 pause(5);
-statesArray = [path(1,2),path(1,3),path(1,4)...
-               path(1,5),path(1,6),path(1,7)...
-               .25,.25,.25,.25,.25,.25];
-Stepper1.updateStates(statesArray);
+statesArray = [theta0(1),theta0(2),theta0(3),...
+               theta0(4),theta0(5),theta0(6),...
+               .2,.2,.2,.2,.2,.2];
+AR3.updateStates(statesArray);
 pause(10);
 
 %%
@@ -86,11 +89,6 @@ Robot.name = 'AR2';
 Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
-offsetTemp = getTransformationMatrix(command0_AR2_J,0);
-
-offset = offsetTemp(1:3);
-offsetAng = offsetTemp(4:6);
-
 
 
 % initialize the time variable
@@ -106,6 +104,12 @@ theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
 
+offsetTemp = getTransformationMatrix(theta0,0);
+
+offset = offsetTemp(1:3);
+offsetAng = offsetTemp(4:6);
+
+
 maxSinAmount = 200;
 
 index = 1;
@@ -115,6 +119,11 @@ while toc < tSim
 %     calculate xdot_global theta_global(orientaiton) thetadot_(global) through forward kinematics
 %     this is where the loop will be closed
     data = natnetclient.getFrame;
+    if (isempty(data.LabeledMarker(1)))
+        fprintf( '\tPacket is empty/stale\n' )
+        fprintf( '\tMake sure the server is in Live mode or playing in playback\n\n')
+        return
+    end
     yaw = data.RigidBody(1).qy;
     pitch = data.RigidBody(1).qz;
     roll = data.RigidBody(1).qx;
@@ -150,10 +159,12 @@ while toc < tSim
         
         qSim(index,:) = theta0;
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
+        qddotSim(index,:) = [0 0 0 0 0 0];
+        qddotCommand(index,:) = qddotSim(index,:);
     else
         h = t - qSaved(index-1,:);
         xSim(index,:) = [actualWorkPos,actualWorkOri];
-        
+        xdotSim(index,:) =  (xSim(index,:) - xSim(index-1,:))/h;
 %       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
 
@@ -170,12 +181,19 @@ while toc < tSim
         
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';  
-    
-    end
-        qSaved(index,:)= [tTime, qSim, qdotSim, ];
+        
+%       take xddotSim to q and qdot
+        qddotCommand(index,:) = tAccel2jAccelRobot(qSim(index,:)',qdotSim(index,:)',xddotSim(index,:)',Robot);
+        qdotCommand(index,:) = h*qddotCommand(index,:) + qddotCommand(index-1,:);
+        qCommand(index,:) = h*qdotCommand(index,:) + qCommand(index-1,:);
 
-%     statesArray_AR2_J = [q(1),q(2),q(3),q(4),q(5),q(6),q_dot(1),q_dot(2),q_dot(3),q_dot(4),q_dot(5),q_dot(6)];
-%     Stepper1.updateStates(statesArray_AR2_J);
+        statesArray_AR2_J = [qCommand(1),qCommand(2),qCommand(3),qCommand(4),qCommand(5),qCommand(6),...
+            qdotCommand(1),qdotCommand(2),qdotCommand(3),qdotCommand(4),qdotCommand(5),qdotCommand(6)];
+        AR3.updateStates(statesArray_AR2_J);
+        
+        qSaved(index,:)= [tTime, qCommand(index,:), qdotCommand(index,:), xSim(index,:), xdotSim(index,:), xddotSim(index,:)];
+    end
+
 
     
 % update loop
@@ -183,53 +201,53 @@ index = index + 1;
 t = t + h;
 
 end
-tGraph = h:h:tSim;
-tGraph = tGraph';
-
-dimToView = 3;
-
-figure
-plot(tGraph,xd(:,dimToView));
-hold on;
-plot(tGraph,xSimG(:,dimToView));
-% title('Corrected Inner Loop Position')
-grid on
-xlabel('Time [s]','FontSize',12)
-ylabel('Position [mm]','FontSize',12)
-legend('Desired Position','Simulated Position')
-
-figure
-plot(tGraph,xdotd(:,dimToView));
-hold on;
-plot(tGraph,xdotSimG(:,dimToView));
-% title('Corrected Inner Loop Velocity')
-grid on
-
-xlabel('Time [s]','FontSize',12)
-ylabel('Velocity [mm/s]','FontSize',12)
-legend('Desired Velocity','Simulated Velocity')
-
-
-figure
-plot(tGraph,xddotd(:,dimToView));
-hold on;
-plot(tGraph,xddotSim(:,dimToView));
-% title('Corrected Inner Loop Acceleration')
-grid on
-
-xlabel('Time [s]','FontSize',12)
-ylabel('Acceleration [mm/s^2]','FontSize',12)
-legend('Desired Acceleration','Simulated Acceleration')
-
-
-errorInnerPos = xSimG(:,dimToView) - xd(:,dimToView);
-errorInnerVel = xdotSimG(:,dimToView) - xdotd(:,dimToView);
-errorInnerAcc = xddotSim(:,dimToView) - xddotd(:,dimToView);
-
-meanErrPos = mean(errorInnerPos);
-meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
-meanErrVel = mean(errorInnerVel);
-meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
-meanErrAcc = mean(errorInnerAcc);
-meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
-% units in mm
+% tGraph = h:h:tSim;
+% tGraph = tGraph';
+% 
+% dimToView = 3;
+% 
+% figure
+% plot(tGraph,xd(:,dimToView));
+% hold on;
+% plot(tGraph,xSimG(:,dimToView));
+% % title('Corrected Inner Loop Position')
+% grid on
+% xlabel('Time [s]','FontSize',12)
+% ylabel('Position [mm]','FontSize',12)
+% legend('Desired Position','Simulated Position')
+% 
+% figure
+% plot(tGraph,xdotd(:,dimToView));
+% hold on;
+% plot(tGraph,xdotSimG(:,dimToView));
+% % title('Corrected Inner Loop Velocity')
+% grid on
+% 
+% xlabel('Time [s]','FontSize',12)
+% ylabel('Velocity [mm/s]','FontSize',12)
+% legend('Desired Velocity','Simulated Velocity')
+% 
+% 
+% figure
+% plot(tGraph,xddotd(:,dimToView));
+% hold on;
+% plot(tGraph,xddotSim(:,dimToView));
+% % title('Corrected Inner Loop Acceleration')
+% grid on
+% 
+% xlabel('Time [s]','FontSize',12)
+% ylabel('Acceleration [mm/s^2]','FontSize',12)
+% legend('Desired Acceleration','Simulated Acceleration')
+% 
+% 
+% errorInnerPos = xSimG(:,dimToView) - xd(:,dimToView);
+% errorInnerVel = xdotSimG(:,dimToView) - xdotd(:,dimToView);
+% errorInnerAcc = xddotSim(:,dimToView) - xddotd(:,dimToView);
+% 
+% meanErrPos = mean(errorInnerPos);
+% meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
+% meanErrVel = mean(errorInnerVel);
+% meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
+% meanErrAcc = mean(errorInnerAcc);
+% meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
+% % units in mm
