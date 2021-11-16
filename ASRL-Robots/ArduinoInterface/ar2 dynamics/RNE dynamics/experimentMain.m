@@ -8,8 +8,36 @@
 
 %DH First, then inertia matrices for each 
 
-clear
-tic
+
+% theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
+
+
+
+
+%% NatNet Connection
+natnetclient = natnet;
+natnetclient.HostIP = '127.0.0.1';
+natnetclient.ClientIP = '127.0.0.1';
+natnetclient.ConnectionType = 'Multicast';
+natnetclient.connect;
+
+if ( natnetclient.IsConnected == 0 )
+	fprintf( 'Client failed to connect\n' )
+	fprintf( '\tMake sure the host is connected to the network\n' )
+	fprintf( '\tand that the host and client IP addresses are correct\n\n' )
+	return
+end
+
+%% Move to initial position
+pause(5);
+statesArray = [theta0(1),theta0(2),theta0(3),...
+               theta0(4),theta0(5),theta0(6),...
+               .2,.2,.2,.2,.2,.2];
+AR3.updateStates(statesArray);
+pause(10);
+
+%%
+
 L(1) = Link([0 169.77/1000 64.2/1000 -1.5707], 'R');
 L(2) = Link([0 0 305/1000 0], 'R');
 L(3) = Link([-1.5707 0 0 1.5707], 'R');
@@ -61,26 +89,9 @@ Robot.name = 'AR2';
 Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
-% calculate the maxRadPerSec for each joint
-STEPPER_CONSTANT(1) = 1/(.022368421*(pi/180));
-STEPPER_CONSTANT(2) = 1/(.018082192*(pi/180));
-STEPPER_CONSTANT(3) = 1/(.017834395*(pi/180));
-STEPPER_CONSTANT(4) = 1/(.021710526*(pi/180));
-STEPPER_CONSTANT(5) = 1/(.045901639*(pi/180));
-STEPPER_CONSTANT(6) = 1/(.046792453*(pi/180));
 
-maxStepsPerSec = 1000;
-maxRadPerSec = zeros(6,1);
-
-for i = 1:6
-    maxRadPerSec(i) = maxStepsPerSec / STEPPER_CONSTANT(i);
-end
-
-% timestep for sim
-h = 0.01;
 
 % initialize the time variable
-t = 0;
 tSim = 30;
 
 % Control Parameters
@@ -93,10 +104,41 @@ theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
 
+offsetTemp = getTransformationMatrix(theta0,0);
+
+offset = offsetTemp(1:3);
+offsetAng = offsetTemp(4:6);
+
+
 maxSinAmount = 200;
 
 index = 1;
-while t < tSim
+while toc < tSim
+    t = toc;
+    
+%     calculate xdot_global theta_global(orientaiton) thetadot_(global) through forward kinematics
+%     this is where the loop will be closed
+    data = natnetclient.getFrame;
+    if (isempty(data.LabeledMarker(1)))
+        fprintf( '\tPacket is empty/stale\n' )
+        fprintf( '\tMake sure the server is in Live mode or playing in playback\n\n')
+        return
+    end
+    yaw = data.RigidBody(1).qy;
+    pitch = data.RigidBody(1).qz;
+    roll = data.RigidBody(1).qx;
+    scalar = data.RigidBody(1).qw;
+    quat = quaternion(roll,yaw,pitch,scalar);
+    qRot = quaternion(0,0,0,1);
+    quat = mtimes(quat,qRot);
+    anglesFromCamera = EulerAngles(quat,'zyz');
+    positionFromCamera = 1000*[-data.RigidBody(1).x;data.RigidBody(1).z;data.RigidBody(1).y;];
+
+%     xSim,xdotSim
+    actualWorkPos = positionFromCamera - offset';
+    actualWorkOri = anglesFromCamera - offsetAng';
+
+    
 %   desired equations of motion
 
     xd(index,:) = [state0(1),0,maxSinAmount*sin(2*pi*t/tSim)+state0(3),0,0,0];
@@ -117,20 +159,15 @@ while t < tSim
         
         qSim(index,:) = theta0;
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
+        qddotSim(index,:) = [0 0 0 0 0 0];
+        qddotCommand(index,:) = qddotSim(index,:);
     else
-%       forward integrate to get the task space motions
-        xdotSim(index,:) = h*xddotSim(index-1,:) + xdotSim(index-1,:);
-        xSim(index,:) = h*xdotSim(index,:) + xSim(index-1,:);
-        
+        h = t - qSaved(index-1,:);
+        xSim(index,:) = [actualWorkPos,actualWorkOri];
+        xdotSim(index,:) =  (xSim(index,:) - xSim(index-1,:))/h;
 %       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
-        for i = 1:6
-           if qdotSim(index,i) > maxRadPerSec(i)
-               qdotSim(index,i) =  maxRadPerSec(i);
-           elseif qdotSim(index,i) < -maxRadPerSec(i)
-               qdotSim(index,i) =  -maxRadPerSec(i);
-           end
-        end
+
             % this calculation for the qdotSim is based on the previous time step calculation of the joint angles. this 
 %             WILL cause issues for calculation accuracy, but i hope the
 %             controller is robust enough to couteract these effects
@@ -144,9 +181,20 @@ while t < tSim
         
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';  
-    
+        
+%       take xddotSim to q and qdot
+        qddotCommand(index,:) = tAccel2jAccelRobot(qSim(index,:)',qdotSim(index,:)',xddotSim(index,:)',Robot);
+        qdotCommand(index,:) = h*qddotCommand(index,:) + qddotCommand(index-1,:);
+        qCommand(index,:) = h*qdotCommand(index,:) + qCommand(index-1,:);
+
+        statesArray_AR2_J = [qCommand(1),qCommand(2),qCommand(3),qCommand(4),qCommand(5),qCommand(6),...
+            qdotCommand(1),qdotCommand(2),qdotCommand(3),qdotCommand(4),qdotCommand(5),qdotCommand(6)];
+        AR3.updateStates(statesArray_AR2_J);
+        
+        qSaved(index,:)= [tTime, qCommand(index,:), qdotCommand(index,:), xSim(index,:), xdotSim(index,:), xddotSim(index,:)];
     end
-    
+
+
     
 % update loop
 index = index + 1;
@@ -202,6 +250,4 @@ end
 % meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
 % meanErrAcc = mean(errorInnerAcc);
 % meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
-% units in mm
-
-toc
+% % units in mm
