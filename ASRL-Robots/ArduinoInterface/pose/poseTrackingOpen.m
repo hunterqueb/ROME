@@ -104,8 +104,10 @@ disp('Executing!')
 %% Main
 % set main iterator and initiate time for the while loop to start
 i=1;
+global manueverTime;
+manueverTime = 30;
 tic
-while(toc<10)  
+while(toc<manueverTime)  
     %on first iteration, initialize variables that constantly update
     if (i == 1)
         AR2_error_W = getError_init(command0_AR2_W_pos, command0_AR2_W_ori, command0_AR2_J);
