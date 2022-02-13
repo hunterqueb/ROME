@@ -99,7 +99,7 @@ KpInner = 4 * eye(6);
 KdInner = 40 * eye(6);
 
 % initial arm pos in joint
-theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
+% theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
 
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
