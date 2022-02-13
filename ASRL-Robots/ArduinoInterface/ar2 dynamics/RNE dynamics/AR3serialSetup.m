@@ -12,5 +12,5 @@ else
 end
 
 AR3 = AR3Serial(a);
-
+AR3.read(0) %test connection
 clear comPort

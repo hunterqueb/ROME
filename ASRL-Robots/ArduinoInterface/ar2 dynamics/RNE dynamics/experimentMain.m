@@ -9,8 +9,8 @@
 %DH First, then inertia matrices for each 
 
 
-% theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
-
+rest = [0,-110*pi/180,141*pi/180,0,0,0];
+theta0 = pi/180*[0,-70,90,0,12,0];
 
 
 
