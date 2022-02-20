@@ -22,12 +22,14 @@ classdef AR3Serial
     
     properties(Access = private, Constant = true)
         %A collection of default positions
-        REST = [0,-110*pi/180,141*pi/180,0,0,0,...
+        REST = [0,-90*pi/180,141*pi/180,0,0,0,...
                 .25,.25,.25,.25,.25,.25];
         CWLimit = [-170*(pi/180),-132*(pi/180),-0*(pi/180),...
                    -155*(pi/180),-105*(pi/180),-155*(pi/180)];
         CCWLimit = [170*(pi/180),0*(pi/180),141*(pi/180),...
                     155*(pi/180),105*(pi/180),155*(pi/180)];
+        HOME = [0,pi/180*-90,pi/180*90,0,0,0,...
+                .25,.25,.25,.25,.25,.25];
     end
 
     properties(Access = private, Constant = true)
@@ -107,7 +109,7 @@ classdef AR3Serial
 
             
             data = [CMD,ID,position,velocity];
-            disp(data)
+%             disp(data)
             writePacket(obj.serial,data);
         end
          
@@ -133,12 +135,12 @@ classdef AR3Serial
             velocities = typecast(velArray,'uint8');
             data = [CMD,positions,velocities];
             
-            disp("States ARray");
-            disp(statesArray);
-            disp("Positions");
-            disp(positions);
-            disp("Velocities");
-            disp(velocities);
+%             disp("States Array");
+%             disp(statesArray);
+%             disp("Positions");
+%             disp(positions);
+%             disp("Velocities");
+%             disp(velocities);
             
             writePacket(obj.serial,data);
             
@@ -147,6 +149,8 @@ classdef AR3Serial
         function [] = default(obj,string)
            if string == "REST"
              obj.updateStates(obj.REST)
+           elseif(string == "HOME")
+             obj.updateStates(obj.HOME)
            end
         end
         
