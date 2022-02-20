@@ -11,6 +11,7 @@
 
 rest = [0,-110*pi/180,141*pi/180,0,0,0];
 theta0 = pi/180*[0,-70,90,0,12,0];
+home = pi/180*[0,-90,90,0,0,0];
 
 
 
@@ -104,10 +105,10 @@ KdInner = 40 * eye(6);
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
 
-offsetTemp = getTransformationMatrix(theta0,0);
+offsetTot = getTransformationMatrix(theta0,0);
 
-offset = offsetTemp(1:3);
-offsetAng = offsetTemp(4:6);
+offset = offsetTot(1:3);
+offsetAng = offsetTot(4:6);
 
 
 maxSinAmount = 200;
