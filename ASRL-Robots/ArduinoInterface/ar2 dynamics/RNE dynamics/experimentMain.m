@@ -163,9 +163,15 @@ while toc < tSim
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
         qddotSim(index,:) = [0 0 0 0 0 0];
         qddotCommand(index,:) = qddotSim(index,:);
+        qCommand(index,:) = theta0;
     else
         h = t - qSaved(index-1,:);
         xSim(index,:) = [actualWorkPos,actualWorkOri];
+        
+%       remove for closed loop
+        [state0,ori0] = AR2FKZYZ(qCommand(index,:));
+        xSim(index,:) = [state0',ori0'];
+        
         xdotSim(index,:) =  (xSim(index,:) - xSim(index-1,:))/h;
 %       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
