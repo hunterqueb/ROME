@@ -138,7 +138,8 @@ while toc < tSim
 %     xSim,xdotSim
     actualWorkPos = positionFromCamera - offset';
     actualWorkOri = anglesFromCamera - offsetAng';
-
+%   consider the angles not matter right now for first tests
+    actualWorkOri = [0 0 0]';
     
 %   desired equations of motion
 
