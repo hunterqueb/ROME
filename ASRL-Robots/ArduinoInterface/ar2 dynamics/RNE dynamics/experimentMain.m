@@ -104,16 +104,18 @@ KdInner = 40 * eye(6);
 
 % initial arm pos in task space
 [state0,ori0] = AR2FKZYZ(theta0);
-
-offsetTot = getTransformationMatrix(theta0,0);
-
-offset = offsetTot(1:3);
-offsetAng = offsetTot(4:6);
+% 
+% offsetTot = getTransformationMatrix(theta0,0);
+% 
+% offset = offsetTot(1:3);
+% offsetAng = offsetTot(4:6);
 
 
 maxSinAmount = 200;
 
 index = 1;
+tic
+
 while toc < tSim
     t = toc;
     
@@ -136,8 +138,8 @@ while toc < tSim
     positionFromCamera = 1000*[-data.RigidBody(1).x;data.RigidBody(1).z;data.RigidBody(1).y;];
 
 %     xSim,xdotSim
-    actualWorkPos = positionFromCamera - offset';
-    actualWorkOri = anglesFromCamera - offsetAng';
+%     actualWorkPos = positionFromCamera - offset';
+%     actualWorkOri = anglesFromCamera - offsetAng';
 %   consider the angles not matter right now for first tests
     actualWorkOri = [0 0 0]';
     
@@ -148,13 +150,14 @@ while toc < tSim
     xddotd(index,:) = [0,0,maxSinAmount*-sin(2*pi*t/tSim) * (2 * pi / tSim)^2,0,0,0];
     
 %   inital conditions
-    xIC(index,:) = [state0',ori0'];
-    xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
-	xddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
     
 %   on first pass, set the IC to first array index for all the simulated
 %   configurations
     if index == 1
+        xIC(index,:) = [state0',ori0'];
+        xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
+        xddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
+    
         xSim(index,:) = xIC(index,:);
         xdotSim(index,:) = xdotIC(index,:);
         xddotSim(index,:) = xddotIC(index,:);
@@ -163,13 +166,15 @@ while toc < tSim
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index,:))) * xdotSim(index,:)';
         qddotSim(index,:) = [0 0 0 0 0 0];
         qddotCommand(index,:) = qddotSim(index,:);
+        qdotCommand(index,:) = [0 0 0 0 0 0];
         qCommand(index,:) = theta0;
+        h = t;
     else
-        h = t - qSaved(index-1,:);
-        xSim(index,:) = [actualWorkPos,actualWorkOri];
+        h = t - qSaved(index-1,1);
+%         xSim(index,:) = [actualWorkPos,actualWorkOri];
         
 %       remove for closed loop
-        [state0,ori0] = AR2FKZYZ(qCommand(index,:));
+        [state0,ori0] = AR2FKZYZ(qCommand(index-1,:));
         xSim(index,:) = [state0',ori0'];
         
         xdotSim(index,:) =  (xSim(index,:) - xSim(index-1,:))/h;
@@ -199,12 +204,13 @@ while toc < tSim
             qdotCommand(1),qdotCommand(2),qdotCommand(3),qdotCommand(4),qdotCommand(5),qdotCommand(6)];
         AR3.updateStates(statesArray_AR2_J);
         
-        qSaved(index,:)= [tTime, qCommand(index,:), qdotCommand(index,:), xSim(index,:), xdotSim(index,:), xddotSim(index,:)];
+        
     end
 
 
     
 % update loop
+qSaved(index,:)= [t, qCommand(index,:), qdotCommand(index,:), xSim(index,:), xdotSim(index,:), xddotSim(index,:)];
 index = index + 1;
 t = t + h;
 
