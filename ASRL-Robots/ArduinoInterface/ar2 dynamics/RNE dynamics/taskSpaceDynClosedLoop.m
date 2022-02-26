@@ -107,7 +107,7 @@ while t < tSim
     xIC(index,:) = [state0',ori0'];
     xdotIC(index,:) = [0, 0, 0, 0, 0, 0];
 	xddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
-    
+    qCommand(index,:) = [0,0,0,0,0,0];
 %   on first pass, set the IC to first array index for all the simulated
 %   configurations
     if index == 1
@@ -144,7 +144,10 @@ while t < tSim
         
         % inner control loop is here
         xddotSim(index,:) = (xddotd(index,:)' + KdInner * (xdotd(index,:)'-xdotSimG(index,:)') + KpInner * (xd(index,:)' - xSimG(index,:)'))';  
-    
+        qddotCommand(index,:) = tAccel2jAccelRobot(qSim(index,:)',qdotSim(index,:)',xddotSim(index,:)',Robot);
+        qdotCommand(index,:) = h*qddotCommand(index,:) + qddotCommand(index-1,:);
+        qCommand(index,:) = h*qdotCommand(index,:) + qCommand(index-1,:);
+
     end
     
     
