@@ -18,7 +18,7 @@ if ( natnetclient.IsConnected == 0 )
 	return
 end
 
-initialStatesWork = manipFK(theta');
+initialStatesWork = AR2FKZYZ(theta');
 
 %rotation matrix for how global rotates to reach work frame
 rotz=[cosd(rotation) -sind(rotation) 0;
