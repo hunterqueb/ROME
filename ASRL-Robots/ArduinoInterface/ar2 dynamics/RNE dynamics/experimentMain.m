@@ -37,6 +37,21 @@ statesArray = [theta0(1),theta0(2),theta0(3),...
 AR3.updateStates(statesArray);
 pause(10);
 
+% calculate the maxRadPerSec for each joint
+STEPPER_CONSTANT(1) = 1/(.022368421*(pi/180));
+STEPPER_CONSTANT(2) = 1/(.018082192*(pi/180));
+STEPPER_CONSTANT(3) = 1/(.017834395*(pi/180));
+STEPPER_CONSTANT(4) = 1/(.021710526*(pi/180));
+STEPPER_CONSTANT(5) = 1/(.045901639*(pi/180));
+STEPPER_CONSTANT(6) = 1/(.046792453*(pi/180));
+
+maxStepsPerSec = 1000;
+maxRadPerSec = zeros(6,1);
+
+for i = 1:6
+    maxRadPerSec(i) = maxStepsPerSec / STEPPER_CONSTANT(i);
+end
+
 %%
 
 L(1) = Link([0 169.77/1000 64.2/1000 -1.5707], 'R');
@@ -180,6 +195,15 @@ while toc < tSim
         xdotSim(index,:) =  (xSim(index,:) - xSim(index-1,:))/h;
 %       using task space motions, get the joint space motions 
         qdotSim(index,:) = pinv(Jacobian0_analytical(qSim(index-1,:))) * xdotSim(index,:)';
+
+%       imposing speed limit here for calculations
+        for i = 1:6
+           if qdotSim(index,i) > maxRadPerSec(i)
+               qdotSim(index,i) =  maxRadPerSec(i);
+           elseif qdotSim(index,i) < -maxRadPerSec(i)
+               qdotSim(index,i) =  -maxRadPerSec(i);
+           end
+        end
 
             % this calculation for the qdotSim is based on the previous time step calculation of the joint angles. this 
 %             WILL cause issues for calculation accuracy, but i hope the
