@@ -84,8 +84,8 @@ t = 0;
 tSim = 30;
 
 % Control Parameters
-KpInner = 4 * eye(6);
-KdInner = 40 * eye(6);
+KpInner = 0 * 4 * eye(6);
+KdInner = 0 * 40 * eye(6);
 
 % initial arm pos in joint
 theta0 = [0,-110*pi/180,141*pi/180,0,0,0];
