@@ -273,6 +273,108 @@ classdef omni
     %% Trajectory Methods
     
     methods
+        
+        function [result] = nextState(obj,pathObj,state, t)
+            tf = t + pathObj.step;
+            tf_false = tf + pathObj.step;
+            pathState = pathObj.getPathW(t);
+            pathState = pathState(1:6);
+            errorState = pathState - state;
+            fullstate = [state errorState];
+            [~, result] = ode45(@odefun,[t tf tf_false],fullstate);
+            result = result(1:2,:);
+            
+            function dydt = odefun(t,states)
+                % unpack states
+                x = states(1);
+                y = states(2);
+                phi = states(3);
+                xDot = states(4);
+                yDot = states(5);
+                phiDot = states(6);
+                oErrorSum = [states(7);states(8);states(9)];
+                iErrorSum = [states(10);states(11);states(12)];
+                
+                
+                pathW = pathObj.getPathW(t);
+                
+                trajW = [x;y;phi];
+                trajDotW = [xDot;yDot;phiDot];
+            
+                % Error is actual - nominal
+                oError = trajW - [pathW(1);pathW(2);pathW(3)];
+            
+                tilde1 = obj.getTilde1(pathW,oError,oErrorSum);
+      
+                
+                %Stability text
+                %tilde1 = tilde1*.4;
+                
+                % Expressed in NOMINAL body frame components
+                pathDotB = omni.worldToBody([pathW(4);pathW(5);pathW(6)],pathW(3));
+                             
+                outerCommandB = pathDotB + tilde1;
+                
+                % Will have to put body rate commands to global frame
+                % because other funcs written in global frame
+                
+                WB = omni.getWB(phi);
+%                 outerCommandW = WB*outerCommandB;
+%                 command = [pathW(1),pathW(2),pathW(3),outerCommandW(1), ...
+%                          outerCommandW(2), outerCommandW(3), pathW(7), ...
+%                          pathW(8),pathW(9)];
+                
+          
+                E = obj.getE(pathW);
+                                
+                BW = WB.';
+                
+                % Equivalent to encoder measurment
+                trajDotB = obj.worldToBody(trajDotW,phi);
+                
+                % Error is actual - nominal
+                iError = trajDotB - outerCommandB;
+                iErrorSum = iErrorSum + iError;
+                
+                tilde2 = obj.getTilde2(pathW,iError,iErrorSum);
+                
+                %Stability text
+                %tilde2 = tilde2*.4;
+                
+                innerCommand = E + tilde2;
+                
+                for i = 1:3
+                    if innerCommand(i) >= 12
+                        disp("POSITIVE SATURATED:");
+                        disp(innerCommand(i));
+                        innerCommand(i) = 12;
+                    elseif innerCommand(i) <= -12
+                        innerCommand(i) = -12;
+                        disp("NEGATIVE SATURATED");
+                        disp(innerCommand(i));
+                    end
+                end
+                        
+                
+                % Final application of control signal done in body frame
+                accel = obj.getAccel(trajDotB,innerCommand);
+                vel = WB*accel;
+                
+                dydt(1,:) = xDot;
+                dydt(2,:) = yDot;
+                dydt(3,:) = phiDot;
+                dydt(4,:) = vel(1);
+                dydt(5,:) = vel(2);
+                dydt(6,:) = vel(3);
+                dydt(7,:) = oError(1);
+                dydt(8,:) = oError(2);
+                dydt(9,:) = oError(3);
+                dydt(10,:) = iError(1);
+                dydt(11,:) = iError(2);
+                dydt(12,:) = iError(3);
+            end
+        end
+                
         function [t,result] = trajectory(obj,pathObj)
             
             %Start this out with zero error for test
@@ -391,6 +493,96 @@ classdef omni
                 dydt(12,:) = iError(3);
             end
         end
+        
+        function dydt = odefun(t,states)
+                % unpack states
+                x = states(1);
+                y = states(2);
+                phi = states(3);
+                xDot = states(4);
+                yDot = states(5);
+                phiDot = states(6);
+                oErrorSum = [states(7);states(8);states(9)];
+                iErrorSum = [states(10);states(11);states(12)];
+                
+                
+                pathW = pathObj.getPathW(t);
+                
+                trajW = [x;y;phi];
+                trajDotW = [xDot;yDot;phiDot];
+            
+                % Error is actual - nominal
+                oError = trajW - [pathW(1);pathW(2);pathW(3)];
+            
+                tilde1 = obj.getTilde1(pathW,oError,oErrorSum);
+      
+                
+                %Stability text
+                %tilde1 = tilde1*.4;
+                
+                % Expressed in NOMINAL body frame components
+                pathDotB = omni.worldToBody([pathW(4);pathW(5);pathW(6)],pathW(3));
+                             
+                outerCommandB = pathDotB + tilde1;
+                
+                % Will have to put body rate commands to global frame
+                % because other funcs written in global frame
+                
+                WB = omni.getWB(phi);
+%                 outerCommandW = WB*outerCommandB;
+%                 command = [pathW(1),pathW(2),pathW(3),outerCommandW(1), ...
+%                          outerCommandW(2), outerCommandW(3), pathW(7), ...
+%                          pathW(8),pathW(9)];
+                
+          
+                E = obj.getE(pathW);
+                                
+                BW = WB.';
+                
+                % Equivalent to encoder measurment
+                trajDotB = obj.worldToBody(trajDotW,phi);
+                
+                % Error is actual - nominal
+                iError = trajDotB - outerCommandB;
+                iErrorSum = iErrorSum + iError;
+                
+                tilde2 = obj.getTilde2(pathW,iError,iErrorSum);
+                
+                %Stability text
+                %tilde2 = tilde2*.4;
+                
+                innerCommand = E + tilde2;
+                
+                for i = 1:3
+                    if innerCommand(i) >= 12
+                        disp("POSITIVE SATURATED:");
+                        disp(innerCommand(i));
+                        innerCommand(i) = 12;
+                    elseif innerCommand(i) <= -12
+                        innerCommand(i) = -12;
+                        disp("NEGATIVE SATURATED");
+                        disp(innerCommand(i));
+                    end
+                end
+                        
+                
+                % Final application of control signal done in body frame
+                accel = obj.getAccel(trajDotB,innerCommand);
+                vel = WB*accel;
+                
+                dydt(1,:) = xDot;
+                dydt(2,:) = yDot;
+                dydt(3,:) = phiDot;
+                dydt(4,:) = vel(1);
+                dydt(5,:) = vel(2);
+                dydt(6,:) = vel(3);
+                dydt(7,:) = oError(1);
+                dydt(8,:) = oError(2);
+                dydt(9,:) = oError(3);
+                dydt(10,:) = iError(1);
+                dydt(11,:) = iError(2);
+                dydt(12,:) = iError(3);
+            end
         
     end
     
