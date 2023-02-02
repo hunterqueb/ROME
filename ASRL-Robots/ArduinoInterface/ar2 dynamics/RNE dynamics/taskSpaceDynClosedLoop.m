@@ -156,55 +156,55 @@ index = index + 1;
 t = t + h;
 
 end
-% tGraph = h:h:tSim;
-% tGraph = tGraph';
-% 
-% dimToView = 3;
-% 
-% figure
-% plot(tGraph,xd(:,dimToView));
-% hold on;
-% plot(tGraph,xSimG(:,dimToView));
-% % title('Corrected Inner Loop Position')
-% grid on
-% xlabel('Time [s]','FontSize',12)
-% ylabel('Position [mm]','FontSize',12)
-% legend('Desired Position','Simulated Position')
-% 
-% figure
-% plot(tGraph,xdotd(:,dimToView));
-% hold on;
-% plot(tGraph,xdotSimG(:,dimToView));
-% % title('Corrected Inner Loop Velocity')
-% grid on
-% 
-% xlabel('Time [s]','FontSize',12)
-% ylabel('Velocity [mm/s]','FontSize',12)
-% legend('Desired Velocity','Simulated Velocity')
-% 
-% 
-% figure
-% plot(tGraph,xddotd(:,dimToView));
-% hold on;
-% plot(tGraph,xddotSim(:,dimToView));
-% % title('Corrected Inner Loop Acceleration')
-% grid on
-% 
-% xlabel('Time [s]','FontSize',12)
-% ylabel('Acceleration [mm/s^2]','FontSize',12)
-% legend('Desired Acceleration','Simulated Acceleration')
-% 
-% 
-% errorInnerPos = xSimG(:,dimToView) - xd(:,dimToView);
-% errorInnerVel = xdotSimG(:,dimToView) - xdotd(:,dimToView);
-% errorInnerAcc = xddotSim(:,dimToView) - xddotd(:,dimToView);
-% 
-% meanErrPos = mean(errorInnerPos);
-% meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
-% meanErrVel = mean(errorInnerVel);
-% meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
-% meanErrAcc = mean(errorInnerAcc);
-% meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
+tGraph = h:h:tSim;
+tGraph = tGraph';
+
+dimToView = 3;
+
+figure
+plot(tGraph,xd(:,dimToView));
+hold on;
+plot(tGraph,xSimG(:,dimToView));
+% title('Corrected Inner Loop Position')
+grid on
+xlabel('Time [s]','FontSize',12)
+ylabel('Position [mm]','FontSize',12)
+legend('Desired Position','Simulated Position')
+
+figure
+plot(tGraph,xdotd(:,dimToView));
+hold on;
+plot(tGraph,xdotSimG(:,dimToView));
+% title('Corrected Inner Loop Velocity')
+grid on
+
+xlabel('Time [s]','FontSize',12)
+ylabel('Velocity [mm/s]','FontSize',12)
+legend('Desired Velocity','Simulated Velocity')
+
+
+figure
+plot(tGraph,xddotd(:,dimToView));
+hold on;
+plot(tGraph,xddotSim(:,dimToView));
+% title('Corrected Inner Loop Acceleration')
+grid on
+
+xlabel('Time [s]','FontSize',12)
+ylabel('Acceleration [mm/s^2]','FontSize',12)
+legend('Desired Acceleration','Simulated Acceleration')
+
+
+errorInnerPos = xSimG(:,dimToView) - xd(:,dimToView);
+errorInnerVel = xdotSimG(:,dimToView) - xdotd(:,dimToView);
+errorInnerAcc = xddotSim(:,dimToView) - xddotd(:,dimToView);
+
+meanErrPos = mean(errorInnerPos);
+meanErrPosPercent = max(meanErrPos)/maxSinAmount * 100
+meanErrVel = mean(errorInnerVel);
+meanErrVelPercent = max(meanErrVel)/maxSinAmount * 100
+meanErrAcc = mean(errorInnerAcc);
+meanErrAccPercent = max(meanErrAcc)/maxSinAmount * 100
 % units in mm
 
 toc

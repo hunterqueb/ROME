@@ -17,6 +17,10 @@ KdInner = 10 * eye(6);
 % this would be the outer loop variables
 KOuter = 1 * eye(6);
 
+% timestep for sim
+h = 0.005;
+
+simTime = 10;
 
 %DH First, then inertia matrices for each 
 
@@ -71,8 +75,6 @@ Robot.name = 'AR2';
 Robot.nofriction('all');
 Robot.gravity = [0 0 9.81]';
 
-% timestep for sim
-h = 0.005;
 
 % initialize the time variable
 t = 0;
@@ -82,7 +84,7 @@ index = 1;
 
 xd = zeros(6,1);
 xSim = zeros(6,1);
-while t < 10
+while t < simTime
 %     inverse dynamics starts - change these to be whatever you want!!!!!!
 qd(index,:) = [      10*sin(t)   10*sin(t)   10*sin(t)         10*sin(t)       10*sin(t)  10*sin(t)  ]; % rad
 qdotd(index,:) = [   10*cos(t)   10*cos(t)  10*cos(t)         10*cos(t)       10*cos(t)   10*cos(t)];

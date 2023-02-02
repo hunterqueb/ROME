@@ -8,6 +8,9 @@
 
 %DH First, then inertia matrices for each 
 
+clear
+
+simTime = 10;
 
 L(1) = Link([0 169.77/1000 64.2/1000 -1.5707], 'R');
 L(2) = Link([0 0 305/1000 0], 'R');
@@ -63,7 +66,7 @@ Robot.gravity = [0 0 9.81]';
 
 t = 0;
 index = 1;
-while t < 10
+while t < simTime
 %     inverse starts
 t = t + 0.1;
 q(index,:) = [      10*sin(t)   10*cos(t)   10*sin(t+180)         0.5*t^3       -10*sin(t)   -0.5*t^3  ]; % rad
