@@ -6,9 +6,20 @@
 % m- Link mass
 % r- link centre of gravity (3x1)
 
+clear
+
+
+angleToView = 1;
+% Control Parameters
+KpInner = 1.2 * eye(6);
+KdInner = 10 * eye(6);
+
+% this would be the outer loop variables
+KOuter = 1 * eye(6);
+
+
 %DH First, then inertia matrices for each 
 
-clear
 L(1) = Link([0 169.77/1000 64.2/1000 -1.5707], 'R');
 L(2) = Link([0 0 305/1000 0], 'R');
 L(3) = Link([-1.5707 0 0 1.5707], 'R');
@@ -66,24 +77,18 @@ h = 0.005;
 % initialize the time variable
 t = 0;
 
-% Control Parameters
-KpInner = 1.2 * eye(6);
-KdInner = 10 * eye(6);
-
-% this would be the outer loop variables
-KOuter = 1 * eye(6);
 
 index = 1;
 
 xd = zeros(6,1);
 xSim = zeros(6,1);
 while t < 10
-%     inverse dynamics starts
+%     inverse dynamics starts - change these to be whatever you want!!!!!!
 qd(index,:) = [      10*sin(t)   10*sin(t)   10*sin(t)         10*sin(t)       10*sin(t)  10*sin(t)  ]; % rad
 qdotd(index,:) = [   10*cos(t)   10*cos(t)  10*cos(t)         10*cos(t)       10*cos(t)   10*cos(t)];
 qddotd(index,:) = [  -10*sin(t)  -10*sin(t)  -10*sin(t)        -10*sin(t)           -10*sin(t)    -10*sin(t) ];
 
-
+% initial position, velocity, and accelerations
 qIC(index,:) = pi/180 * [20, 20, 20, 20, 20, 20];
 qdotIC(index,:) = [0, 0, 0, 0, 0, 0];
 qddotIC(index,:) = [0, 0, 0, 0 ,0 ,0];
@@ -107,6 +112,7 @@ JSim = Jacobian0_analytical(qSim);
 [xSim(1:3),xSim(4:6)] = AR2FKZYZ(qSim);
 
 xdotd(index,:) = Jd * qdotd(index,:)';
+xdotSim(index,:) = Jd * qdotSim(index,:)';
 
 taud(index,:) = Robot.rne(qd(index,:),qdotd(index,:),qddotd(index,:));
 tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
@@ -123,37 +129,15 @@ tauSim(index,:) = Robot.rne(qSim(index,:),qdotSim(index,:),qddotSim(index,:));
 
 ePos(index,:) = xd - xSim;
 
-qdotCorrected(index,:) = pinv(JSim) * (xdotd(index,:)' + KOuter * ePos(index,:)'); % + (eye(n) - pinv(J)*J*qdot0; 
-                                     % this term is added for a redundant
-                                     % manipulator
+qdotCorrected(index,:) = pinv(Jd) * (xdotd(index,:)' + KOuter * ePos(index,:)'); % + (eye(n) - pinv(J)*J*qdot0; 
+                                                                                   % this term is added for a redundant
+                                                                                   % manipulator
                         
 if (index == 1)
     qCorrected(index,:) = qIC(index,:);
 else
     qCorrected(index,:) = h*qdotCorrected(index,:) + qCorrected(index-1,:);
 end
-% % forward starts -- this is here just for checking the accuracy of the
-% % forward and inverse dynamics functions
-% 
-% CandGVectors(index,:) = Robot.rne(qd(index,:),qdotd(index,:),zeros(1,6));
-% 
-% Robot.gravity = [0 0 0]';
-% 
-% for i = 1:6
-%     qddotMass = zeros(1,6);
-%     qddotMass(i) = 1;
-%     M(index,:,i) = Robot.rne(qd(index,:),zeros(1,6),qddotMass);
-% end
-% 
-% MMat = squeeze(M(index,:,:));
-% qddotdForw(index,:) = pinv(MMat)*(taud(index,:)' - CandGVectors(index,:)');
-% here the wrench term (J(q)' * W) is also subtracted
-% qddotSim(index+1,:) = pinv(MMat)*(tauCorr' - CandGVectors(index,:)');
-% 
-% % reset gravity from forward dynamics
-% Robot.gravity = [0 0 9.81]';
-% % forward ends
-
 
 % update loop counters and time variable
 index = index + 1;
@@ -161,14 +145,14 @@ t = t + h;
 
 end
 
-angleToView = 1;
 
 % graph to check the acceleration results without the outer loop
 figure
-plot(qddotSim(:,1));
+plot(qddotSim(:,angleToView));
 hold on
-plot(qddotd(:,1));
+plot(qddotd(:,angleToView));
 title('Corrected Acceleration')
+legend('simulated','desired')
 grid on
 
 xlabel('Iterations','FontSize',12)
@@ -176,10 +160,11 @@ ylabel('Acceleration [rad/s^2]','FontSize',12)
 
 % graph to check the velocity results without the outer loop
 figure
-plot(qdotSim(:,1));
+plot(qdotSim(:,angleToView));
 hold on
-plot(qdotd(:,1));
+plot(qdotd(:,angleToView));
 title('Corrected Inner Loop Velocity')
+legend('simulated','desired')
 grid on
 
 xlabel('Iterations','FontSize',12)
@@ -187,10 +172,11 @@ ylabel('Velocity [rad/s]','FontSize',12)
 
 % graph to check the position results without the outer loop
 figure
-plot(qSim(:,1));
+plot(qSim(:,angleToView));
 hold on
-plot(qd(:,1));
+plot(qd(:,angleToView));
 title('Corrected Inner Loop Position')
+legend('simulated','desired')
 
 grid on
 
